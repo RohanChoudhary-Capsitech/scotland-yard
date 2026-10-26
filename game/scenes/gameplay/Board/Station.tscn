@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/gameplay/Board/Station.gd" id="1_eg5kh"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/shared/station_base.png" id="2_nixae"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/shared/ring_taxi.png" id="3_ol3ug"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/shared/ring_bus.png" id="4_xrcm6"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/shared/ring_underground.png" id="5_puey3"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/shared/station_highlight.png" id="6_e3eke"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_x0gld"]
+radius = 16.0
+
+[sub_resource type="Animation" id="Animation_vunbu"]
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Highlight:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.25, 1.25), Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Highlight:modulate:a")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.5, 1),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.4, 1.0, 0.4]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_vxnvw"]
+_data = {
+&"pulse": SubResource("Animation_vunbu")
+}
+
+[node name="Station" type="Area2D" unique_id=1769685686]
+script = ExtResource("1_eg5kh")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1237050847]
+shape = SubResource("CircleShape2D_x0gld")
+
+[node name="Base" type="Sprite2D" parent="." unique_id=477853729]
+texture = ExtResource("2_nixae")
+
+[node name="TaxiRing" type="Sprite2D" parent="." unique_id=1626264625]
+visible = false
+modulate = Color(0.9607843, 0.77254903, 0.25882354, 1)
+texture = ExtResource("3_ol3ug")
+
+[node name="BusRing" type="Sprite2D" parent="." unique_id=2055165598]
+visible = false
+modulate = Color(0.23137255, 0.76862746, 0.5411765, 1)
+texture = ExtResource("4_xrcm6")
+
+[node name="UndergroundRing" type="Sprite2D" parent="." unique_id=98017381]
+visible = false
+modulate = Color(0.9098039, 0.27058825, 0.47843137, 1)
+texture = ExtResource("5_puey3")
+
+[node name="Highlight" type="Sprite2D" parent="." unique_id=943524142]
+visible = false
+modulate = Color(1, 0.9019608, 0, 1)
+texture = ExtResource("6_e3eke")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=661134238]
+libraries/ = SubResource("AnimationLibrary_vxnvw")
+
+[node name="Number" type="Label" parent="." unique_id=857961200]
+offset_left = -20.0
+offset_top = -12.0
+offset_right = 20.0
+offset_bottom = 12.0
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
+text = "1"
+horizontal_alignment = 1
+vertical_alignment = 1
