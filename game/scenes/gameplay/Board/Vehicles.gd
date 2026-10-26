@@ -11,10 +11,24 @@ extends Node2D
 @onready var ferry: Sprite2D = $Ferry
 @onready var wake: GPUParticles2D = $Ferry/Wake
 
+func _ensure_nodes() -> void:
+	if taxi == null:
+		taxi = get_node_or_null("Taxi") as Sprite2D
+	if bus == null:
+		bus = get_node_or_null("Bus") as Sprite2D
+	if train == null:
+		train = get_node_or_null("Train") as Sprite2D
+	if ferry == null:
+		ferry = get_node_or_null("Ferry") as Sprite2D
+	if wake == null and ferry != null:
+		wake = ferry.get_node_or_null("Wake") as GPUParticles2D
+
 func _ready() -> void:
+	_ensure_nodes()
 	hide_all()
 
 func get_vehicle(transport_type: String) -> Sprite2D:
+	_ensure_nodes()
 	match transport_type:
 		"taxi":
 			return taxi
@@ -28,6 +42,7 @@ func get_vehicle(transport_type: String) -> Sprite2D:
 			return taxi
 
 func hide_all() -> void:
+	_ensure_nodes()
 	if taxi:
 		taxi.visible = false
 		taxi.scale = Vector2.ONE

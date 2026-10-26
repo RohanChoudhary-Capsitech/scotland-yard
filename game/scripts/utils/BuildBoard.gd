@@ -13,6 +13,8 @@ const LINK_SCENE_PATH := "res://game/scenes/gameplay/Board/Link.tscn"
 const TOKEN_SCENE_PATH := "res://game/scenes/gameplay/Board/Token.tscn"
 const LAST_SEEN_SCENE_PATH := "res://game/scenes/gameplay/Board/LastSeen.tscn"
 const BOARD_SCRIPT_PATH := "res://game/scenes/gameplay/Board/Board.gd"
+const BACKGROUND_TEXTURE_PATH := "res://game/assets/sprites/backgrounds/CityMap.png"
+const VEHICLES_SCENE_PATH := "res://game/scenes/gameplay/Board/Vehicles.tscn"
 
 func _run() -> void:
 	build_board_scene()
@@ -41,6 +43,7 @@ static func build_board_scene() -> bool:
 	var link_scene: PackedScene = load(LINK_SCENE_PATH)
 	var token_scene: PackedScene = load(TOKEN_SCENE_PATH)
 	var last_seen_scene: PackedScene = load(LAST_SEEN_SCENE_PATH)
+	var vehicles_scene: PackedScene = load(VEHICLES_SCENE_PATH)
 	var board_script: Script = load(BOARD_SCRIPT_PATH)
 
 	# 1. Root Board Node
@@ -48,7 +51,15 @@ static func build_board_scene() -> bool:
 	board.name = "Board"
 	board.set_script(board_script)
 
-	# 2. Links Node + Groups
+	# 2. Background Sprite2D (drawn under everything)
+	var bg := Sprite2D.new()
+	bg.name = "Background"
+	bg.texture = load(BACKGROUND_TEXTURE_PATH)
+	bg.position = Vector2(1200.0, 900.0)
+	board.add_child(bg)
+	bg.owner = board
+
+	# 3. Links Node + Groups
 	var links_root := Node2D.new()
 	links_root.name = "Links"
 	board.add_child(links_root)
@@ -119,7 +130,13 @@ static func build_board_scene() -> bool:
 		target_group.add_child(link_instance)
 		link_instance.owner = board
 
-	# 4. Create Stations
+	# 4. Vehicles Instance (above Links, below Tokens)
+	var vehicles_instance: Node2D = vehicles_scene.instantiate()
+	vehicles_instance.name = "Vehicles"
+	board.add_child(vehicles_instance)
+	vehicles_instance.owner = board
+
+	# 5. Create Stations
 	var stations_root := Node2D.new()
 	stations_root.name = "Stations"
 	board.add_child(stations_root)

@@ -3,11 +3,23 @@ extends SceneTree
 ## BoardPlayabilityTest — Verifies that Board.tscn, Match.tscn,
 ## and all gameplay components are properly constructed, connected,
 ## and fully playable in both game modes ("detectives" and "mrx").
+## Specifically asserts:
+##  1. Board hierarchy: Background Sprite2D as first child with CityMap.png,
+##     Vehicles node with 4 vehicle sprites + wake particles, proper Z-order.
+##  2. board.play_move() coroutine executes and resolves cleanly for taxi, bus,
+##     underground, ferry, and black tickets.
+##  3. Hidden-movement rule: in "Play as Detectives" mode, Mr. X moves do NOT
+##     show any vehicle sprite, do NOT emit wake particles, and keep Mr. X's
+##     token invisible on non-reveal rounds. In "Play as Mr. X" mode, human Mr. X
+##     sees vehicle transit and visible token.
 
 var passed_tests: int = 0
 var failed_tests: int = 0
 
 func _init() -> void:
+	_run_all_tests.call_deferred()
+
+func _run_all_tests() -> void:
 	print("\n==================================================")
 	print("       RUNNING BOARD & PLAYABILITY TESTS          ")
 	print("==================================================")
@@ -15,8 +27,9 @@ func _init() -> void:
 	test_board_hierarchy()
 	test_board_methods()
 	test_board_camera()
-	test_playability_detectives_mode()
-	test_playability_mrx_mode()
+	await test_board_play_move()
+	await test_playability_detectives_mode()
+	await test_playability_mrx_mode()
 
 	print("==================================================")
 	print("TEST RESULTS: %d Passed, %d Failed" % [passed_tests, failed_tests])
@@ -49,10 +62,15 @@ func test_board_hierarchy() -> void:
 	var board := board_scene.instantiate() as Board
 	_assert_true(board != null, "Board instantiated successfully")
 
-	var stations_node: Node2D = board.get_node_or_null("Stations")
-	_assert_true(stations_node != null, "Board has $Stations node")
-	_assert_true(stations_node.get_child_count() == 199, "Board has exactly 199 Station instances (got %d)" % stations_node.get_child_count())
+	# Check Background is first child
+	_assert_true(board.get_child_count() > 0, "Board has children")
+	var first_child := board.get_child(0)
+	_assert_true(first_child is Sprite2D and first_child.name == "Background", "First child is Background Sprite2D")
+	var bg := first_child as Sprite2D
+	_assert_true(bg.texture != null, "Background Sprite2D has texture assigned")
+	_assert_true(bg.position == Vector2(1200, 900), "Background position centered at (1200, 900)")
 
+	# Check Links
 	var links_node: Node2D = board.get_node_or_null("Links")
 	_assert_true(links_node != null, "Board has $Links node")
 
@@ -74,8 +92,36 @@ func test_board_hierarchy() -> void:
 	)
 	_assert_true(total_links == 449, "Total links across groups == 449 (got %d)" % total_links)
 
+	# Check Vehicles instance
+	var vehicles: BoardVehicles = board.get_node_or_null("Vehicles") as BoardVehicles
+	_assert_true(vehicles != null, "Board has $Vehicles instance")
+	vehicles._ensure_nodes()
+	_assert_true(vehicles.taxi != null, "Vehicles has Taxi Sprite2D")
+	_assert_true(vehicles.bus != null, "Vehicles has Bus Sprite2D")
+	_assert_true(vehicles.train != null, "Vehicles has Train Sprite2D")
+	_assert_true(vehicles.ferry != null, "Vehicles has Ferry Sprite2D")
+	_assert_true(vehicles.wake != null, "Vehicles has Wake GPUParticles2D")
+	_assert_true(not vehicles.taxi.visible, "Taxi initially hidden")
+	_assert_true(not vehicles.bus.visible, "Bus initially hidden")
+	_assert_true(not vehicles.train.visible, "Train initially hidden")
+	_assert_true(not vehicles.ferry.visible, "Ferry initially hidden")
+	_assert_true(not vehicles.wake.emitting, "Wake initially not emitting")
+
+	# Check layer ordering: Vehicles is above Links, below Tokens
+	var links_idx: int = links_node.get_index()
+	var vehicles_idx: int = vehicles.get_index()
 	var tokens_node: Node2D = board.get_node_or_null("Tokens")
 	_assert_true(tokens_node != null, "Board has $Tokens node")
+	var tokens_idx: int = tokens_node.get_index()
+	_assert_true(vehicles_idx > links_idx, "Vehicles rendered above Links (index %d > %d)" % [vehicles_idx, links_idx])
+	_assert_true(vehicles_idx < tokens_idx, "Vehicles rendered below Tokens (index %d < %d)" % [vehicles_idx, tokens_idx])
+
+	# Check Stations
+	var stations_node: Node2D = board.get_node_or_null("Stations")
+	_assert_true(stations_node != null, "Board has $Stations node")
+	_assert_true(stations_node.get_child_count() == 199, "Board has exactly 199 Station instances (got %d)" % stations_node.get_child_count())
+
+	# Check Tokens
 	_assert_true(tokens_node.get_child_count() == 6, "Board has 6 Token instances")
 
 	var last_seen: LastSeenMarker = board.get_node_or_null("LastSeen") as LastSeenMarker
@@ -130,6 +176,63 @@ func test_board_camera() -> void:
 
 	cam.free()
 
+func test_board_play_move() -> void:
+	print("\n--- 4. Testing Board.play_move() Vehicle Animations ---")
+	var board_scene: PackedScene = load("res://game/scenes/gameplay/Board/Board.tscn")
+	var board := board_scene.instantiate() as Board
+	root.add_child(board)
+
+	# 1. Test taxi move
+	board.set_token_position(1, 1, false)
+	board.set_token_visible(1, true)
+	await board.play_move(1, 1, 2, "taxi")
+	_assert_true(board.get_token(1).position == board.get_station_position(2), "Taxi move: Token 1 arrived at Station 2")
+	_assert_true(board.get_token(1).visible, "Taxi move: Token 1 visible after arrival")
+	_assert_true(not board.get_vehicles().taxi.visible, "Taxi move: Taxi sprite hidden on completion")
+
+	# 2. Test bus move
+	board.set_token_position(2, 3, false)
+	board.set_token_visible(2, true)
+	await board.play_move(2, 3, 22, "bus")
+	_assert_true(board.get_token(2).position == board.get_station_position(22), "Bus move: Token 2 arrived at Station 22")
+	_assert_true(board.get_token(2).visible, "Bus move: Token 2 visible after arrival")
+	_assert_true(not board.get_vehicles().bus.visible, "Bus move: Bus sprite hidden on completion")
+
+	# 3. Test underground move
+	board.set_token_position(3, 3, false)
+	board.set_token_visible(3, true)
+	await board.play_move(3, 3, 22, "underground")
+	_assert_true(board.get_token(3).position == board.get_station_position(22), "Underground move: Token 3 arrived at Station 22")
+	_assert_true(board.get_token(3).visible, "Underground move: Token 3 visible after arrival")
+	_assert_true(not board.get_vehicles().train.visible, "Underground move: Train sprite hidden on completion")
+
+	# 4. Test ferry move
+	board.set_token_position(4, 16, false)
+	board.set_token_visible(4, true)
+	await board.play_move(4, 16, 19, "ferry")
+	_assert_true(board.get_token(4).position == board.get_station_position(19), "Ferry move: Token 4 arrived at Station 19")
+	_assert_true(board.get_token(4).visible, "Ferry move: Token 4 visible after arrival")
+	_assert_true(not board.get_vehicles().ferry.visible, "Ferry move: Ferry sprite hidden on completion")
+	_assert_true(not board.get_vehicles().wake.emitting, "Ferry move: Wake particles stopped emitting")
+
+	# 5. Test Mr. X black ticket on ferry link (uses Ferry + wake particles)
+	board.set_token_position(0, 16, false)
+	board.set_token_visible(0, true)
+	await board.play_move(0, 16, 19, "black")
+	_assert_true(board.get_token(0).position == board.get_station_position(19), "Black ticket on ferry: Token 0 arrived at Station 19")
+	_assert_true(not board.get_vehicles().ferry.visible, "Black ticket on ferry: Ferry sprite hidden on completion")
+	_assert_true(not board.get_vehicles().wake.emitting, "Black ticket on ferry: Wake particles stopped emitting")
+
+	# 6. Test Mr. X black ticket on land link (uses shadow car)
+	board.set_token_position(0, 1, false)
+	board.set_token_visible(0, true)
+	await board.play_move(0, 1, 2, "black")
+	_assert_true(board.get_token(0).position == board.get_station_position(2), "Black ticket on land: Token 0 arrived at Station 2")
+	_assert_true(not board.get_vehicles().taxi.visible, "Black ticket on land: Shadow car hidden on completion")
+
+	root.remove_child(board)
+	board.free()
+
 class MockSaveManager extends RefCounted:
 	var store: Dictionary = {}
 	func get_value(key: String, default_val: Variant = null) -> Variant:
@@ -140,14 +243,14 @@ class MockSaveManager extends RefCounted:
 		pass
 
 func test_playability_detectives_mode() -> void:
-	print("\n--- 4. Testing Gameplay in 'Play as Detectives' Mode ---")
+	print("\n--- 5. Testing Gameplay in 'Play as Detectives' Mode ---")
 	var match_scene: PackedScene = load("res://game/scenes/gameplay/Match.tscn")
 	_assert_true(match_scene != null, "Match.tscn loaded successfully")
 
 	var match_inst := match_scene.instantiate() as Match
 	_assert_true(match_inst != null, "Match.tscn instantiated")
+	root.add_child(match_inst)
 
-	# Setup mock dependencies
 	var game_manager := GameManager.new()
 	var bus_script = load("res://game/autoloads/GameBus.gd")
 	var bus: Node = bus_script.new()
@@ -157,16 +260,46 @@ func test_playability_detectives_mode() -> void:
 
 	match_inst.inject_dependencies(game_manager, bus, save, null, null)
 
-	var match_feat: MatchFeature = match_inst.get_node("MatchFeature")
+	var match_feat: MatchFeature = match_inst.match_feature
 	_assert_true(match_feat != null, "Match has MatchFeature")
 	_assert_true(match_feat.mode == "detectives", "Match mode is 'detectives'")
+
+	# Initial token visibilities
+	_assert_true(not match_inst.board.get_token(0).visible, "Detectives mode: Mr. X token is hidden initially")
+	_assert_true(match_inst.board.get_token(1).visible, "Detectives mode: Detective 1 token is visible")
+	_assert_true(match_inst.board.get_token(2).visible, "Detectives mode: Detective 2 token is visible")
+	_assert_true(match_inst.board.get_token(3).visible, "Detectives mode: Detective 3 token is visible")
+	_assert_true(match_inst.board.get_token(4).visible, "Detectives mode: Detective 4 token is visible")
+
+	# Initial vehicle states
+	_assert_true(not match_inst.board.get_vehicles().taxi.visible, "Taxi initially hidden")
+	_assert_true(not match_inst.board.get_vehicles().bus.visible, "Bus initially hidden")
+	_assert_true(not match_inst.board.get_vehicles().train.visible, "Train initially hidden")
+	_assert_true(not match_inst.board.get_vehicles().ferry.visible, "Ferry initially hidden")
+	_assert_true(not match_inst.board.get_vehicles().wake.emitting, "Wake initially not emitting")
 
 	# Initial turn is Mr. X (AI)
 	_assert_true(match_feat.is_ai_turn(), "Turn 0 is AI turn (Mr. X)")
 
-	# Let Mr. X AI move
-	var mrx_ok := match_feat.play_ai_turn()
-	_assert_true(mrx_ok, "Mr. X AI executed move successfully")
+	# Let Mr. X move using _execute_move_and_animate
+	var legal_mrx: Array[Dictionary] = match_feat.state.legal_moves(0)
+	_assert_true(not legal_mrx.is_empty(), "Mr. X has legal moves")
+	var mrx_target: int = int(legal_mrx[0]["to"])
+	var mrx_ticket: String = str(legal_mrx[0]["ticket"])
+
+	await match_inst._execute_move_and_animate(0, mrx_target, mrx_ticket)
+
+	# CRITICAL HIDDEN-MOVEMENT ASSERTIONS FOR MR. X IN DETECTIVES MODE:
+	_assert_true(not match_inst.board.get_vehicles().taxi.visible, "CRITICAL: Mr. X move did NOT show Taxi sprite")
+	_assert_true(not match_inst.board.get_vehicles().bus.visible, "CRITICAL: Mr. X move did NOT show Bus sprite")
+	_assert_true(not match_inst.board.get_vehicles().train.visible, "CRITICAL: Mr. X move did NOT show Train sprite")
+	_assert_true(not match_inst.board.get_vehicles().ferry.visible, "CRITICAL: Mr. X move did NOT show Ferry sprite")
+	_assert_true(not match_inst.board.get_vehicles().wake.emitting, "CRITICAL: Mr. X move did NOT emit Wake particles")
+	_assert_true(not match_inst.board.get_token(0).visible, "CRITICAL: Mr. X token remains invisible after round 1 non-reveal move")
+	_assert_true(match_feat.state.mrx_move_log.size() == 1, "Mr. X move logged in travel log")
+	_assert_true(match_feat.state.positions[0] == mrx_target, "Mr. X position updated internally in state")
+
+	# Turn passed to Detective 1 (human)
 	_assert_true(match_feat.state.current_player == 1, "Turn passed to Detective 1 (human)")
 	_assert_true(not match_feat.is_ai_turn(), "Detective 1 turn is human turn")
 
@@ -174,18 +307,27 @@ func test_playability_detectives_mode() -> void:
 	var legal_d1: Array[Dictionary] = match_feat.state.legal_moves(1)
 	_assert_true(not legal_d1.is_empty(), "Detective 1 has legal moves")
 	var chosen_st: int = int(legal_d1[0]["to"])
+	var chosen_ticket: String = str(legal_d1[0]["ticket"])
 
 	match_inst._on_station_clicked(chosen_st)
-	_assert_true(match_feat.state.positions[1] == chosen_st, "Detective 1 moved to clicked station %d" % chosen_st)
+	while match_inst._is_animating_move:
+		await process_frame
 
+	_assert_true(match_feat.state.positions[1] == chosen_st, "Detective 1 moved to clicked station %d" % chosen_st)
+	_assert_true(match_inst.board.get_token(1).position == match_inst.board.get_station_position(chosen_st), "Detective 1 token positioned at station %d" % chosen_st)
+	_assert_true(match_inst.board.get_token(1).visible, "Detective 1 token visible")
+	_assert_true(not match_inst.board.get_vehicles().get_vehicle(chosen_ticket).visible, "Vehicle hidden after Detective 1 move finishes")
+
+	root.remove_child(match_inst)
 	match_inst.free()
 	game_manager.free()
 	bus.free()
 
 func test_playability_mrx_mode() -> void:
-	print("\n--- 5. Testing Gameplay in 'Play as Mr. X' Mode ---")
+	print("\n--- 6. Testing Gameplay in 'Play as Mr. X' Mode ---")
 	var match_scene: PackedScene = load("res://game/scenes/gameplay/Match.tscn")
 	var match_inst := match_scene.instantiate() as Match
+	root.add_child(match_inst)
 
 	var game_manager := GameManager.new()
 	var bus_script = load("res://game/autoloads/GameBus.gd")
@@ -196,28 +338,45 @@ func test_playability_mrx_mode() -> void:
 
 	match_inst.inject_dependencies(game_manager, bus, save, null, null)
 
-	var match_feat: MatchFeature = match_inst.get_node("MatchFeature")
+	var match_feat: MatchFeature = match_inst.match_feature
+	_assert_true(match_feat != null, "Match has MatchFeature")
 	_assert_true(match_feat.mode == "mrx", "Match mode is 'mrx'")
 
-	# In Mr. X mode, Mr. X is human
+	# In Mr. X mode, Mr. X is human and visible to the player!
 	_assert_true(not match_feat.is_ai_turn(), "Initial turn is human turn (Mr. X)")
+	_assert_true(match_inst.board.get_token(0).visible, "In Mr. X mode, Mr. X token is visible to human player")
 
-	# Human clicks a legal station for Mr. X
+	# Human Mr. X clicks a legal station:
 	var legal_mrx: Array[Dictionary] = match_feat.state.legal_moves(0)
 	_assert_true(not legal_mrx.is_empty(), "Mr. X has legal moves")
 	var target_st: int = int(legal_mrx[0]["to"])
+	var ticket_mrx: String = str(legal_mrx[0]["ticket"])
 
 	match_inst._on_station_clicked(target_st)
+	while match_inst._is_animating_move:
+		await process_frame
+
 	_assert_true(match_feat.state.positions[0] == target_st, "Mr. X moved to clicked station %d" % target_st)
+	_assert_true(match_inst.board.get_token(0).position == match_inst.board.get_station_position(target_st), "Mr. X token moved to station %d" % target_st)
+	_assert_true(match_inst.board.get_token(0).visible, "Mr. X token remains visible to human player")
+	_assert_true(not match_inst.board.get_vehicles().get_vehicle(ticket_mrx).visible, "Vehicle hidden after Mr. X move finishes")
 
 	# Now it's Detective 1 (AI)
 	_assert_true(match_feat.state.current_player == 1, "Turn passed to Detective 1 (AI)")
 	_assert_true(match_feat.is_ai_turn(), "Detective 1 turn is AI turn")
 
-	# Let Detective 1 AI move
-	var d1_ok := match_feat.play_ai_turn()
-	_assert_true(d1_ok, "Detective 1 AI move executed")
+	# Execute Detective 1 move with animation
+	var legal_d1: Array[Dictionary] = match_feat.state.legal_moves(1)
+	_assert_true(not legal_d1.is_empty(), "Detective 1 has legal moves")
+	var d1_to: int = int(legal_d1[0]["to"])
+	var d1_ticket: String = str(legal_d1[0]["ticket"])
 
+	await match_inst._execute_move_and_animate(1, d1_to, d1_ticket)
+	_assert_true(match_feat.state.positions[1] == d1_to, "Detective 1 moved to station %d" % d1_to)
+	_assert_true(match_inst.board.get_token(1).position == match_inst.board.get_station_position(d1_to), "Detective 1 token positioned at station %d" % d1_to)
+	_assert_true(match_inst.board.get_token(1).visible, "Detective 1 token visible")
+
+	root.remove_child(match_inst)
 	match_inst.free()
 	game_manager.free()
 	bus.free()
