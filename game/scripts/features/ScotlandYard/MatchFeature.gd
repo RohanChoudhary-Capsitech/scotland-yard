@@ -9,13 +9,59 @@ var map_data: MapData
 var state: SYGameState
 var mrx_ai: MrXAI
 var detective_ai: DetectiveAI
+var ai_gaze: AIGaze
+var player_gaze: PlayerGaze
 
 var _game: GameManager
 var _bus: Node
 var _logger: Node
-var mode: String = "detectives"  # "detectives", "mrx", or "ai_vs_ai"
+var seats: Array[Dictionary] = [] # [{ "id": int, "name": String, "type": "human"|"ai", "is_human": bool }]
 var detective_count: int = 4
 var auto_play_ai: bool = false   # When true, automatically steps AI turns until next human turn
+var tells_enabled: bool = false
+
+var mode: String:
+	get:
+		if seats.is_empty():
+			return "detectives"
+		var mrx_h := is_human_player(0)
+		var any_det_h := false
+		var all_det_h := true
+		for d in range(1, seats.size()):
+			if is_human_player(d):
+				any_det_h = true
+			else:
+				all_det_h = false
+		if not mrx_h and all_det_h:
+			return "detectives"
+		elif mrx_h and not any_det_h:
+			return "mrx"
+		elif mrx_h and all_det_h:
+			return "pass_and_play"
+		elif not mrx_h and not any_det_h:
+			return "ai_vs_ai"
+		return "mixed"
+	set(val):
+		seats = _build_seats_from_mode(val, detective_count)
+
+func _build_seats_from_mode(p_mode: String, p_count: int) -> Array[Dictionary]:
+	var res: Array[Dictionary] = []
+	var is_mrx_human: bool = (p_mode == "mrx" or p_mode == "pass_and_play")
+	res.append({
+		"id": 0,
+		"name": "Mr. X",
+		"type": "human" if is_mrx_human else "ai",
+		"is_human": is_mrx_human
+	})
+	var are_dets_human: bool = (p_mode == "detectives" or p_mode == "pass_and_play")
+	for d in range(1, p_count + 1):
+		res.append({
+			"id": d,
+			"name": "Detective %d" % d,
+			"type": "human" if are_dets_human else "ai",
+			"is_human": are_dets_human
+		})
+	return res
 
 func initialize(deps: Dictionary) -> void:
 	if _initialized:
@@ -25,9 +71,29 @@ func initialize(deps: Dictionary) -> void:
 	_game = deps.get("game") as GameManager
 	_bus = deps.get("bus") as Node
 	_logger = deps.get("logger") as Node
-	mode = str(deps.get("mode", "detectives"))
-	detective_count = int(deps.get("detectives", 4))
 	auto_play_ai = bool(deps.get("auto_play_ai", false))
+	tells_enabled = bool(deps.get("tells_enabled", false))
+
+	# Setup seats (authoritative seat configuration)
+	if deps.has("seats") and deps["seats"] != null and not deps["seats"].is_empty():
+		seats = []
+		for s in deps["seats"]:
+			if s is Dictionary:
+				var is_h: bool = (s.get("type", "human") == "human" or s.get("is_human", false))
+				seats.append({
+					"id": int(s.get("id", seats.size())),
+					"name": str(s.get("name", "Mr. X" if seats.is_empty() else "Detective %d" % seats.size())),
+					"type": "human" if is_h else "ai",
+					"is_human": is_h
+				})
+		detective_count = maxi(3, seats.size() - 1)
+	elif deps.has("mode"):
+		var m_str: String = str(deps.get("mode", "detectives"))
+		detective_count = int(deps.get("detectives", 4))
+		seats = _build_seats_from_mode(m_str, detective_count)
+	else:
+		detective_count = int(deps.get("detectives", 4))
+		seats = _build_seats_from_mode("detectives", detective_count)
 
 	if deps.has("map_data") and deps["map_data"] != null:
 		map_data = deps["map_data"] as MapData
@@ -37,6 +103,9 @@ func initialize(deps: Dictionary) -> void:
 	state = SYGameState.new(map_data, detective_count)
 	mrx_ai = MrXAI.new()
 	detective_ai = DetectiveAI.new()
+	ai_gaze = AIGaze.new(map_data, state, mrx_ai)
+	player_gaze = PlayerGaze.new(map_data)
+	detective_ai.tells_enabled = tells_enabled
 
 func start() -> void:
 	if not _initialized or _started:
@@ -47,7 +116,7 @@ func start() -> void:
 		_game.start()
 
 	if _logger:
-		_logger.info("MatchFeature started", {"mode": mode, "detectives": detective_count})
+		_logger.info("MatchFeature started", {"mode": mode, "detectives": detective_count, "seats": seats})
 
 	if _bus:
 		_bus.round_changed.emit(state.round)
@@ -56,15 +125,39 @@ func start() -> void:
 	if auto_play_ai and is_ai_turn() and not state.game_over:
 		step_ai_turns()
 
-## Returns true if the given player is controlled by AI in the current mode.
-func is_ai_player(player: int) -> bool:
-	if mode == "ai_vs_ai":
-		return true
-	elif mode == "detectives":
-		return player == 0
-	elif mode == "mrx":
-		return player > 0
+## Returns true if the given player is controlled by human in the current seat config.
+func is_human_player(player: int) -> bool:
+	if player >= 0 and player < seats.size():
+		return seats[player].get("is_human", false) or seats[player].get("type", "") == "human"
 	return false
+
+## Returns true if the given player is controlled by AI in the current seat config.
+func is_ai_player(player: int) -> bool:
+	return not is_human_player(player)
+
+## Returns the configured display name for the player.
+func get_player_name(player: int) -> String:
+	if player >= 0 and player < seats.size():
+		return str(seats[player].get("name", "Mr. X" if player == 0 else "Detective %d" % player))
+	return "Mr. X" if player == 0 else "Detective %d" % player
+
+## Returns true if at least one detective is human controlled.
+func has_human_detectives() -> bool:
+	for d in range(1, seats.size()):
+		if is_human_player(d):
+			return true
+	return false
+
+## Returns true if at least one detective is AI controlled.
+func has_ai_detectives() -> bool:
+	for d in range(1, seats.size()):
+		if is_ai_player(d):
+			return true
+	return false
+
+## Returns true if Mr. X is human controlled.
+func is_human_mrx() -> bool:
+	return is_human_player(0)
 
 ## Returns true if the currently active player is controlled by AI.
 func is_ai_turn() -> bool:
@@ -80,11 +173,26 @@ func play_ai_turn() -> bool:
 
 	if state.current_player == 0:
 		# Mr. X AI turn
+		if tells_enabled and ai_gaze != null:
+			var gaze_w := ai_gaze.generate_turn_gaze()
+			detective_ai.set_gaze_weights(gaze_w, true)
+			if ai_gaze.is_eyes_closed:
+				if _bus != null:
+					_bus.mrx_closed_eyes.emit()
+			else:
+				if _bus != null and not ai_gaze.gaze_waypoints.is_empty():
+					_bus.mrx_gaze_started.emit(ai_gaze.gaze_waypoints[0])
+		else:
+			detective_ai.set_gaze_weights({}, false)
+
 		if mrx_ai.choose_double_move(state, map_data):
 			use_double_move()
 		var move: Dictionary = mrx_ai.choose_move(state, map_data)
 		if not move.is_empty():
-			return apply_move(0, int(move["to"]), str(move["ticket"]))
+			var ok := apply_move(0, int(move["to"]), str(move["ticket"]))
+			if _bus != null and tells_enabled:
+				_bus.mrx_gaze_ended.emit()
+			return ok
 		return false
 	else:
 		# Detective AI turn
@@ -104,6 +212,13 @@ func step_ai_turns() -> void:
 func apply_move(player: int, to: int, ticket: String) -> bool:
 	if not _started or state.game_over:
 		return false
+
+	# If human Mr. X just completed a move, feed accumulated gaze weights to detective AI if AI detectives exist
+	if player == 0 and is_human_player(0) and tells_enabled and player_gaze != null:
+		if has_ai_detectives():
+			var gaze_w := player_gaze.get_attention_weights()
+			detective_ai.set_gaze_weights(gaze_w, true)
+		player_gaze.decay_for_new_round()
 
 	var prev_round: int = state.round
 	var ok := state.apply_move(player, to, ticket)

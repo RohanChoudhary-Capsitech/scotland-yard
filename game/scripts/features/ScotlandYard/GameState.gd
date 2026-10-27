@@ -15,6 +15,8 @@ var round: int = 1                     # 1..24
 var current_player: int = 0            # 0 = Mr. X, 1..detective_count = Detectives
 var detective_count: int = 4           # 3..5
 var double_move_phase: int = 0         # 0 = normal, 1 = first move made in double move, 2 = second move made
+var close_eyes_cards: int = 2          # Mr. X gets 2 Close Eyes cards per match
+var mrx_start_station: int = 0         # Initial starting station of Mr. X
 var mrx_move_log: Array[Dictionary] = [] # [{ "round": int, "ticket": String, "station": int, "revealed": bool }]
 var last_revealed_position: int = 0
 var last_skipped_detectives: Array[int] = [] # Detectives skipped in the last transition
@@ -33,6 +35,7 @@ func setup_new_game(p_map_data: MapData, p_detective_count: int = 4, p_start_sta
 	round = 1
 	current_player = 0
 	double_move_phase = 0
+	close_eyes_cards = 2
 	mrx_move_log.clear()
 	last_revealed_position = 0
 	last_skipped_detectives.clear()
@@ -41,13 +44,14 @@ func setup_new_game(p_map_data: MapData, p_detective_count: int = 4, p_start_sta
 	reason = ""
 
 	# 1. Setup Tickets
-	# Mr. X: 4 taxi, 3 bus, 3 underground, black = detective_count, 2 double-move cards
+	# Mr. X: 4 taxi, 3 bus, 3 underground, black = detective_count, 2 double-move cards, 2 close-eyes cards
 	tickets[0] = {
 		"taxi": 4,
 		"bus": 3,
 		"underground": 3,
 		"black": detective_count,
 		"double": 2,
+		"close_eyes": 2,
 	}
 
 	# Detectives: 10 taxi, 8 bus, 4 underground
@@ -58,6 +62,7 @@ func setup_new_game(p_map_data: MapData, p_detective_count: int = 4, p_start_sta
 			"underground": 4,
 			"black": 0,
 			"double": 0,
+			"close_eyes": 0,
 		}
 
 	# 2. Setup Starting Stations
@@ -75,6 +80,18 @@ func setup_new_game(p_map_data: MapData, p_detective_count: int = 4, p_start_sta
 			positions[i] = available_starts[i]
 		else:
 			positions[i] = i + 1
+
+	mrx_start_station = positions.get(0, 0)
+
+func get_mrx_route() -> Array[int]:
+	var route: Array[int] = []
+	if mrx_start_station > 0:
+		route.append(mrx_start_station)
+	for entry in mrx_move_log:
+		var st: int = int(entry.get("station", 0))
+		if st > 0:
+			route.append(st)
+	return route
 
 func is_reveal_round(r: int) -> bool:
 	return r in REVEAL_ROUNDS
@@ -159,6 +176,15 @@ func use_double_move() -> bool:
 
 	tickets[0]["double"] -= 1
 	double_move_phase = 1
+	return true
+
+## Uses a Close Eyes card for Mr. X, hiding his gaze spotlight for the turn.
+func use_close_eyes() -> bool:
+	if game_over or close_eyes_cards <= 0:
+		return false
+	close_eyes_cards -= 1
+	if tickets.has(0):
+		tickets[0]["close_eyes"] = close_eyes_cards
 	return true
 
 ## Applies a move for player to `to` station using `ticket`.
@@ -334,6 +360,8 @@ func duplicate() -> SYGameState:
 	copy.round = round
 	copy.current_player = current_player
 	copy.double_move_phase = double_move_phase
+	copy.close_eyes_cards = close_eyes_cards
+	copy.mrx_start_station = mrx_start_station
 	copy.last_revealed_position = last_revealed_position
 	copy.game_over = game_over
 	copy.winner = winner

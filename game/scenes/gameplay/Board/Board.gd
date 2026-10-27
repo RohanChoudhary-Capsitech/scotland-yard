@@ -10,6 +10,19 @@ signal station_clicked(station_id: int)
 @onready var _tokens: Node2D = $Tokens
 @onready var _last_seen: LastSeenMarker = $LastSeen
 @onready var _vehicles: BoardVehicles = $Vehicles
+@onready var _darkness: CanvasModulate = get_node_or_null("Darkness") as CanvasModulate
+@onready var _spotlight: Node2D = get_node_or_null("Spotlight") as Node2D
+@onready var _spotlight_light: PointLight2D = get_node_or_null("Spotlight/Light") as PointLight2D
+
+const DARKNESS_COLOR: Color = Color(0.62, 0.62, 0.70, 1.0)
+## Vehicle sprites are drawn at 2x resolution.
+const VEHICLE_SCALE: float = 0.5
+
+var _spotlight_target: Vector2 = Vector2.ZERO
+var _spotlight_wobble_time: float = 0.0
+@export var spotlight_lag: float = 0.15
+var _darkness_tween: Tween = null
+var _route_links: Array[Link] = []
 
 func _ensure_nodes() -> void:
 	if _stations == null:
@@ -20,6 +33,12 @@ func _ensure_nodes() -> void:
 		_last_seen = get_node_or_null("LastSeen")
 	if _vehicles == null:
 		_vehicles = get_node_or_null("Vehicles") as BoardVehicles
+	if _darkness == null:
+		_darkness = get_node_or_null("Darkness") as CanvasModulate
+	if _spotlight == null:
+		_spotlight = get_node_or_null("Spotlight") as Node2D
+	if _spotlight_light == null and _spotlight != null:
+		_spotlight_light = _spotlight.get_node_or_null("Light") as PointLight2D
 
 func _ready() -> void:
 	_ensure_nodes()
@@ -49,6 +68,7 @@ func set_station_highlight(station_id: int, on: bool) -> void:
 
 func clear_all_highlights() -> void:
 	_ensure_nodes()
+	clear_routes()
 	if _stations == null:
 		return
 	for child in _stations.get_children():
@@ -59,6 +79,101 @@ func highlight_stations(station_ids: Array[int]) -> void:
 	clear_all_highlights()
 	for sid in station_ids:
 		set_station_highlight(sid, true)
+
+## Route preview: lights up the streets/lines from `from_id` to every legal destination,
+## coloured by transport. `moves` are legal_moves() entries ({"to", "ticket"}).
+func show_routes(from_id: int, moves: Array) -> void:
+	clear_routes()
+	for m in moves:
+		var to_id: int = int(m["to"])
+		var ticket: String = str(m["ticket"])
+		var types: Array = [ticket] if ticket in ["taxi", "bus", "underground", "ferry"] else ["taxi", "bus", "underground", "ferry"]
+		for t in types:
+			var l := _find_link(from_id, to_id, t)
+			if l != null and not _route_links.has(l):
+				l.set_route_highlight(true)
+				_route_links.append(l)
+
+func clear_routes() -> void:
+	for l in _route_links:
+		if is_instance_valid(l):
+			l.set_route_highlight(false)
+	_route_links.clear()
+
+func get_route_link_count() -> int:
+	return _route_links.size()
+
+## Reveals the full Mr. X route on the map for game over
+func show_mrx_route(route: Array[int]) -> void:
+	highlight_stations(route)
+	set_token_visible(0, true)
+
+## Shows Mr. X's gaze spotlight and softly fades in Darkness CanvasModulate
+func show_spotlight(initial_pos: Vector2 = Vector2.ZERO) -> void:
+	_ensure_nodes()
+	if _spotlight == null or _darkness == null:
+		return
+
+	if initial_pos != Vector2.ZERO:
+		_spotlight_target = initial_pos
+		_spotlight.position = initial_pos
+
+	_spotlight.visible = true
+	_darkness.visible = true
+
+	if _darkness_tween != null and _darkness_tween.is_valid():
+		_darkness_tween.kill()
+
+	_darkness_tween = create_tween()
+	_darkness_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_darkness_tween.tween_property(_darkness, "color", DARKNESS_COLOR, 0.35)
+
+## Hides Mr. X's gaze spotlight and restores normal map lighting
+func hide_spotlight(immediate: bool = false) -> void:
+	_ensure_nodes()
+	if _darkness == null or _spotlight == null:
+		return
+
+	if _darkness_tween != null and _darkness_tween.is_valid():
+		_darkness_tween.kill()
+
+	if immediate:
+		_darkness.visible = false
+		_darkness.color = Color.WHITE
+		_spotlight.visible = false
+		return
+
+	_darkness_tween = create_tween()
+	_darkness_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_darkness_tween.tween_property(_darkness, "color", Color.WHITE, 0.3)
+	_darkness_tween.finished.connect(func():
+		if _darkness != null:
+			_darkness.visible = false
+		if _spotlight != null:
+			_spotlight.visible = false
+	)
+
+func set_spotlight_target(world_pos: Vector2) -> void:
+	_spotlight_target = world_pos
+
+func get_spotlight_position() -> Vector2:
+	_ensure_nodes()
+	return _spotlight.position if _spotlight != null else Vector2.ZERO
+
+func is_spotlight_visible() -> bool:
+	_ensure_nodes()
+	return _spotlight != null and _spotlight.visible
+
+func _process(delta: float) -> void:
+	if _spotlight != null and _spotlight.visible:
+		_spotlight_wobble_time += delta * 2.8
+		var wobble := Vector2(
+			sin(_spotlight_wobble_time * 1.7) * 32.0,
+			cos(_spotlight_wobble_time * 2.2) * 24.0
+		)
+		var lagged_target := _spotlight_target + wobble
+		var lag_factor: float = 1.0 - exp(-delta / spotlight_lag)
+		_spotlight.position = _spotlight.position.lerp(lagged_target, lag_factor)
 
 func get_token(player_id: int) -> Token:
 	_ensure_nodes()
@@ -94,6 +209,18 @@ func set_last_seen(station_id: int, is_vis: bool) -> void:
 func get_vehicles() -> BoardVehicles:
 	_ensure_nodes()
 	return _vehicles
+
+## Readability LOD for camera zoom: station pins grow 1.35x when zoomed out (< 0.7)
+## so all 199 stations stay readable over the city.
+func set_zoom_lod(zoom_factor: float) -> void:
+	_ensure_nodes()
+	var zoomed_out: bool = (zoom_factor < 0.7)
+
+	if _stations != null:
+		var pin_scale: Vector2 = Vector2(1.35, 1.35) if zoomed_out else Vector2(1.0, 1.0)
+		for child in _stations.get_children():
+			if child is Station:
+				child.scale = pin_scale
 
 ## Animates a vehicle moving along the transit link between stations.
 ## Reuses existing pre-placed vehicle nodes without creating anything at runtime.
@@ -147,7 +274,7 @@ func play_move(player_index: int, from_id: int, to_id: int, ticket: String) -> v
 	vehicle_sprite.position = from_pos
 	vehicle_sprite.rotation = angle
 	vehicle_sprite.visible = true
-	vehicle_sprite.scale = Vector2.ONE
+	vehicle_sprite.scale = Vector2.ONE * VEHICLE_SCALE
 
 	if is_shadow_car:
 		vehicle_sprite.modulate = Color(0.2, 0.2, 0.25, 0.9)
@@ -185,8 +312,11 @@ func play_move(player_index: int, from_id: int, to_id: int, ticket: String) -> v
 	elif is_bus:
 		# Bus drive + small brake squash at arrival
 		tween.tween_property(vehicle_sprite, "position", to_pos, duration)
-		tween.tween_property(vehicle_sprite, "scale", Vector2(0.85, 1.15), 0.08)
-		tween.tween_property(vehicle_sprite, "scale", Vector2(1.0, 1.0), 0.08)
+		tween.tween_property(vehicle_sprite, "scale", Vector2(0.85, 1.15) * VEHICLE_SCALE, 0.08)
+		tween.tween_property(vehicle_sprite, "scale", Vector2.ONE * VEHICLE_SCALE, 0.08)
+	elif is_ferry:
+		var route := _ferry_route(from_id, to_id)
+		tween.tween_method(func(t: float): _place_on_path(vehicle_sprite, route, t), 0.0, 1.0, duration)
 	else:
 		tween.tween_property(vehicle_sprite, "position", to_pos, duration)
 
@@ -238,6 +368,22 @@ func _find_link(from_id: int, to_id: int, ltype: String) -> Link:
 	if l == null:
 		l = group.get_node_or_null(n2) as Link
 	return l
+
+## Ferry boats follow the curved ferry link (which bows into the river), in travel direction.
+func _ferry_route(from_id: int, to_id: int) -> PackedVector2Array:
+	var l := _find_link(from_id, to_id, "ferry")
+	if l == null or l.points.size() < 2:
+		return PackedVector2Array([get_station_position(from_id), get_station_position(to_id)])
+	var pts := l.points
+	if pts[0].distance_to(get_station_position(from_id)) > pts[-1].distance_to(get_station_position(from_id)):
+		pts.reverse()
+	return pts
+
+func _place_on_path(sprite: Node2D, pts: PackedVector2Array, t: float) -> void:
+	var f: float = clampf(t, 0.0, 1.0) * (pts.size() - 1)
+	var i: int = mini(int(f), pts.size() - 2)
+	sprite.position = pts[i].lerp(pts[i + 1], f - i)
+	sprite.rotation = (pts[i + 1] - pts[i]).angle()
 
 func _is_ferry_link(a: int, b: int) -> bool:
 	return _find_link(a, b, "ferry") != null

@@ -1,0 +1,137 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/TicketPicker.gd" id="1_tp"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/taxi.svg" id="3_taxi"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/bus.svg" id="4_bus"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/metro.svg" id="5_metro"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/black.svg" id="6_black"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/eye_closed.svg" id="7_eyes"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/close.svg" id="8_close"]
+
+[node name="TicketPicker" type="Control"]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -290.0
+offset_top = -196.0
+offset_right = 290.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_tp")
+
+[node name="Panel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme_type_variation = &"PanelModal"
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="TitleBox" type="VBoxContainer" parent="Panel/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="LblCaps" type="Label" parent="Panel/VBox/Header/TitleBox"]
+layout_mode = 2
+theme_type_variation = &"LabelCaps"
+text = "CHOOSE YOUR TICKET"
+
+[node name="LblTitle" type="Label" parent="Panel/VBox/Header/TitleBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+text = "Travel to Station 45"
+
+[node name="BtnCancel" type="Button" parent="Panel/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "Cancel"
+theme_type_variation = &"ButtonGhost"
+icon = ExtResource("8_close")
+icon_alignment = 1
+expand_icon = true
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BtnTaxi" type="Button" parent="Panel/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(118, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonTaxi"
+text = "Taxi"
+icon = ExtResource("3_taxi")
+
+[node name="BtnBus" type="Button" parent="Panel/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(118, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonBus"
+text = "Bus"
+icon = ExtResource("4_bus")
+
+[node name="BtnUnderground" type="Button" parent="Panel/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(118, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonMetro"
+text = "Metro"
+icon = ExtResource("5_metro")
+
+[node name="BtnBlack" type="Button" parent="Panel/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(118, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Secret ticket: detectives won't see which transport you used"
+theme_type_variation = &"ButtonBlack"
+text = "Secret"
+icon = ExtResource("6_black")
+
+[node name="BottomHBox" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ChkDoubleMove" type="CheckBox" parent="Panel/VBox/BottomHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+text = "Double move"
+
+[node name="Spacer" type="Control" parent="Panel/VBox/BottomHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BtnCloseEyes" type="Button" parent="Panel/VBox/BottomHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 48)
+layout_mode = 2
+tooltip_text = "Hide your gaze spotlight this turn"
+text = "Close eyes · 2"
+icon = ExtResource("7_eyes")

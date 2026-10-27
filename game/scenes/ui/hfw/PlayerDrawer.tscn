@@ -1,0 +1,166 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/PlayerDrawer.gd" id="1_pd"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/PlayerRow.tscn" id="3_prow"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/players.svg" id="4_players"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/chevron_left.svg" id="5_left"]
+
+[node name="PlayerDrawer" type="Control"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 3
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 78.0
+offset_right = 74.0
+offset_bottom = -12.0
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_pd")
+
+[node name="MainPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="CollapsedView" type="VBoxContainer" parent="MainPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BtnExpand" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+tooltip_text = "Show players"
+theme_type_variation = &"ButtonIcon"
+icon = ExtResource("4_players")
+icon_alignment = 1
+expand_icon = true
+
+[node name="MiniAvatar_0" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "X"
+
+[node name="MiniAvatar_1" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "D1"
+
+[node name="MiniAvatar_2" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "D2"
+
+[node name="MiniAvatar_3" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "D3"
+
+[node name="MiniAvatar_4" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "D4"
+
+[node name="MiniAvatar_5" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "D5"
+
+[node name="ExpandedView" type="VBoxContainer" parent="MainPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderHBox" type="HBoxContainer" parent="MainPanel/ExpandedView"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="MainPanel/ExpandedView/HeaderHBox"]
+modulate = Color(1, 0.761, 0.239, 1)
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("4_players")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblTitle" type="Label" parent="MainPanel/ExpandedView/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LabelCaps"
+theme_override_font_sizes/font_size = 13
+text = "PLAYERS"
+
+[node name="BtnCollapse" type="Button" parent="MainPanel/ExpandedView/HeaderHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+tooltip_text = "Hide players"
+theme_type_variation = &"ButtonGhost"
+icon = ExtResource("5_left")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Scroll" type="ScrollContainer" parent="MainPanel/ExpandedView"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="RowsVBox" type="VBoxContainer" parent="MainPanel/ExpandedView/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="PlayerRow_0" parent="MainPanel/ExpandedView/Scroll/RowsVBox" instance=ExtResource("3_prow")]
+unique_name_in_owner = true
+layout_mode = 2
+player_id = 0
+
+[node name="PlayerRow_1" parent="MainPanel/ExpandedView/Scroll/RowsVBox" instance=ExtResource("3_prow")]
+unique_name_in_owner = true
+layout_mode = 2
+player_id = 1
+
+[node name="PlayerRow_2" parent="MainPanel/ExpandedView/Scroll/RowsVBox" instance=ExtResource("3_prow")]
+unique_name_in_owner = true
+layout_mode = 2
+player_id = 2
+
+[node name="PlayerRow_3" parent="MainPanel/ExpandedView/Scroll/RowsVBox" instance=ExtResource("3_prow")]
+unique_name_in_owner = true
+layout_mode = 2
+player_id = 3
+
+[node name="PlayerRow_4" parent="MainPanel/ExpandedView/Scroll/RowsVBox" instance=ExtResource("3_prow")]
+unique_name_in_owner = true
+layout_mode = 2
+player_id = 4
+
+[node name="PlayerRow_5" parent="MainPanel/ExpandedView/Scroll/RowsVBox" instance=ExtResource("3_prow")]
+unique_name_in_owner = true
+layout_mode = 2
+player_id = 5

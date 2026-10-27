@@ -10,7 +10,11 @@ enum Stage { PROTOTYPE, STAGING, PRODUCTION }
 const BUILD_STAGE: Stage = Stage.PROTOTYPE
 
 const UI_PANELS = {
-					}
+	"game_over": "res://game/scenes/ui/hfw/GameOverPanel.tscn",
+	"handover": "res://game/scenes/ui/hfw/HandoverPanel.tscn",
+	"how_to_play": "res://game/scenes/ui/hfw/HowToPlayPanel.tscn",
+	"pause": "res://game/scenes/ui/hfw/PausePanel.tscn",
+}
 
 #How to use
 #var scene: PackedScene = load(GameConfig.UI_PANELS["shop"])

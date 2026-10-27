@@ -1,0 +1,386 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/HowToPlayPanel.gd" id="1_htp"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/close.svg" id="3_close"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/detective.svg" id="i0"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/taxi.svg" id="i1"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/mask.svg" id="i2"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/black.svg" id="i3"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/eye.svg" id="i4"]
+
+[sub_resource type="StyleBoxFlat" id="Style_icon_0"]
+bg_color = Color(0.231, 0.510, 0.965, 0.18)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.231, 0.510, 0.965, 0.9)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+corner_detail = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_icon_1"]
+bg_color = Color(0.961, 0.773, 0.259, 0.18)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.961, 0.773, 0.259, 0.9)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+corner_detail = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_icon_2"]
+bg_color = Color(0.545, 0.361, 0.965, 0.18)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.545, 0.361, 0.965, 0.9)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+corner_detail = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_icon_3"]
+bg_color = Color(0.788, 0.800, 0.839, 0.18)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.788, 0.800, 0.839, 0.9)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+corner_detail = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_icon_4"]
+bg_color = Color(1.000, 0.761, 0.239, 0.18)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1.000, 0.761, 0.239, 0.9)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+corner_detail = 8
+
+[node name="HowToPlayPanel" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_htp")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.07, 0.8)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ModalPanel" type="PanelContainer" parent="Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+theme_type_variation = &"PanelModal"
+
+[node name="VBox" type="VBoxContainer" parent="Center/ModalPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Center/ModalPanel/VBox"]
+layout_mode = 2
+
+[node name="LblTitle" type="Label" parent="Center/ModalPanel/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LabelTitle"
+theme_override_font_sizes/font_size = 30
+text = "How to play"
+
+[node name="BtnClose" type="Button" parent="Center/ModalPanel/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+theme_type_variation = &"ButtonGhost"
+icon = ExtResource("3_close")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Scroll" type="ScrollContainer" parent="Center/ModalPanel/VBox"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Rules" type="VBoxContainer" parent="Center/ModalPanel/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="Rule0" type="HBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="IconBg" type="Panel" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule0"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_icon_0")
+
+[node name="Icon" type="TextureRect" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule0/IconBg"]
+modulate = Color(0.231, 0.510, 0.965, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("i0")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule0"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Head" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule0/Text"]
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 17
+text = "Catch Mr. X"
+
+[node name="Body" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule0/Text"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 15
+text = "Detectives win by landing on Mr. X's station, or when he has nowhere left to go. Mr. X wins by staying free for 24 rounds."
+autowrap_mode = 3
+
+[node name="Rule1" type="HBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="IconBg" type="Panel" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule1"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_icon_1")
+
+[node name="Icon" type="TextureRect" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule1/IconBg"]
+modulate = Color(0.961, 0.773, 0.259, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("i1")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule1"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Head" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule1/Text"]
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 17
+text = "Move with tickets"
+
+[node name="Body" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule1/Text"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 15
+text = "Tap a glowing station to travel there. Each trip spends a ticket for its transport: taxi, bus or metro. Detectives start with 10 taxi, 8 bus and 4 metro tickets."
+autowrap_mode = 3
+
+[node name="Rule2" type="HBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="IconBg" type="Panel" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule2"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_icon_2")
+
+[node name="Icon" type="TextureRect" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule2/IconBg"]
+modulate = Color(0.545, 0.361, 0.965, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("i2")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Head" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule2/Text"]
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 17
+text = "Mr. X moves in secret"
+
+[node name="Body" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule2/Text"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 15
+text = "His position stays hidden. The travel log shows which ticket he used each round, and he surfaces on rounds 3, 8, 13, 18 and 24."
+autowrap_mode = 3
+
+[node name="Rule3" type="HBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="IconBg" type="Panel" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule3"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_icon_3")
+
+[node name="Icon" type="TextureRect" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule3/IconBg"]
+modulate = Color(0.788, 0.800, 0.839, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("i3")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule3"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Head" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule3/Text"]
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 17
+text = "Secret tickets and double moves"
+
+[node name="Body" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule3/Text"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 15
+text = "Mr. X can play a secret ticket to hide his transport (it's also the only way onto the ferry) and twice per game make two moves in one turn."
+autowrap_mode = 3
+
+[node name="Rule4" type="HBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="IconBg" type="Panel" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule4"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_icon_4")
+
+[node name="Icon" type="TextureRect" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule4/IconBg"]
+modulate = Color(1.000, 0.761, 0.239, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("i4")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule4"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Head" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule4/Text"]
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 17
+text = "Read his eyes"
+
+[node name="Body" type="Label" parent="Center/ModalPanel/VBox/Scroll/Rules/Rule4/Text"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 15
+text = "With Spotlight tells on, Mr. X's gaze sweeps the map as a soft spotlight. Watch where it lingers, but beware: he can bluff, or close his eyes twice per game."
+autowrap_mode = 3
+
+[node name="BtnGotIt" type="Button" parent="Center/ModalPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_type_variation = &"ButtonPrimary"
+text = "GOT IT"

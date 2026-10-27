@@ -1,0 +1,314 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/PlayerRow.gd" id="1_pr"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/taxi.svg" id="i_taxi"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/bus.svg" id="i_bus"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/metro.svg" id="i_ug"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/black.svg" id="i_black"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/double.svg" id="i_double"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/eye_closed.svg" id="i_eyes"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_row"]
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 0.04)
+border_color = Color(1, 1, 1, 0.08)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_avatar"]
+bg_color = Color(0.545, 0.361, 0.965, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.9)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="Style_ChipTaxi"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.961, 0.773, 0.259, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_ChipBus"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.231, 0.769, 0.541, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_ChipUG"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.910, 0.271, 0.478, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_ChipBlack"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.790, 0.800, 0.840, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_ChipDouble"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.545, 0.361, 0.965, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_ChipCloseEyes"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.550, 0.750, 1.000, 0.16)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="PlayerRow" type="PanelContainer"]
+custom_minimum_size = Vector2(264, 64)
+offset_right = 264.0
+offset_bottom = 64.0
+theme = ExtResource("2_theme")
+theme_override_styles/panel = SubResource("StyleBoxFlat_row")
+script = ExtResource("1_pr")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AvatarBadge" type="PanelContainer" parent="HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_avatar")
+
+[node name="LblAvatar" type="Label" parent="HBox/AvatarBadge"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 14
+text = "D1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoBox" type="VBoxContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="TopLine" type="HBoxContainer" parent="HBox/InfoBox"]
+layout_mode = 2
+
+[node name="LblName" type="Label" parent="HBox/InfoBox/TopLine"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 15
+text = "Detective 1"
+text_overrun_behavior = 3
+
+[node name="LblStation" type="Label" parent="HBox/InfoBox/TopLine"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 13
+text = "Stn 50"
+horizontal_alignment = 2
+
+[node name="TicketBox" type="HFlowContainer" parent="HBox/InfoBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+
+[node name="ChipTaxi" type="PanelContainer" parent="HBox/InfoBox/TicketBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_ChipTaxi")
+
+[node name="HBox" type="HBoxContainer" parent="HBox/InfoBox/TicketBox/ChipTaxi"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="IconTaxi" type="TextureRect" parent="HBox/InfoBox/TicketBox/ChipTaxi/HBox"]
+modulate = Color(0.961, 0.773, 0.259, 1)
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("i_taxi")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblTaxi" type="Label" parent="HBox/InfoBox/TicketBox/ChipTaxi/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1.000, 0.930, 0.365, 1)
+theme_override_font_sizes/font_size = 12
+text = "10"
+
+[node name="ChipBus" type="PanelContainer" parent="HBox/InfoBox/TicketBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_ChipBus")
+
+[node name="HBox" type="HBoxContainer" parent="HBox/InfoBox/TicketBox/ChipBus"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="IconBus" type="TextureRect" parent="HBox/InfoBox/TicketBox/ChipBus/HBox"]
+modulate = Color(0.231, 0.769, 0.541, 1)
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("i_bus")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblBus" type="Label" parent="HBox/InfoBox/TicketBox/ChipBus/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.334, 0.926, 0.675, 1)
+theme_override_font_sizes/font_size = 12
+text = "8"
+
+[node name="ChipUG" type="PanelContainer" parent="HBox/InfoBox/TicketBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_ChipUG")
+
+[node name="HBox" type="HBoxContainer" parent="HBox/InfoBox/TicketBox/ChipUG"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="IconUG" type="TextureRect" parent="HBox/InfoBox/TicketBox/ChipUG/HBox"]
+modulate = Color(0.910, 0.271, 0.478, 1)
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("i_ug")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblUG" type="Label" parent="HBox/InfoBox/TicketBox/ChipUG/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1.000, 0.378, 0.606, 1)
+theme_override_font_sizes/font_size = 12
+text = "4"
+
+[node name="ChipBlack" type="PanelContainer" parent="HBox/InfoBox/TicketBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_ChipBlack")
+
+[node name="HBox" type="HBoxContainer" parent="HBox/InfoBox/TicketBox/ChipBlack"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="IconBlack" type="TextureRect" parent="HBox/InfoBox/TicketBox/ChipBlack/HBox"]
+modulate = Color(0.790, 0.800, 0.840, 1)
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("i_black")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblBlack" type="Label" parent="HBox/InfoBox/TicketBox/ChipBlack/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.949, 0.960, 1.000, 1)
+theme_override_font_sizes/font_size = 12
+text = "4"
+
+[node name="ChipDouble" type="PanelContainer" parent="HBox/InfoBox/TicketBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_ChipDouble")
+
+[node name="HBox" type="HBoxContainer" parent="HBox/InfoBox/TicketBox/ChipDouble"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="IconDouble" type="TextureRect" parent="HBox/InfoBox/TicketBox/ChipDouble/HBox"]
+modulate = Color(0.545, 0.361, 0.965, 1)
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("i_double")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblDouble" type="Label" parent="HBox/InfoBox/TicketBox/ChipDouble/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.680, 0.477, 1.000, 1)
+theme_override_font_sizes/font_size = 12
+text = "2"
+
+[node name="ChipCloseEyes" type="PanelContainer" parent="HBox/InfoBox/TicketBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_ChipCloseEyes")
+
+[node name="HBox" type="HBoxContainer" parent="HBox/InfoBox/TicketBox/ChipCloseEyes"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="IconCloseEyes" type="TextureRect" parent="HBox/InfoBox/TicketBox/ChipCloseEyes/HBox"]
+modulate = Color(0.550, 0.750, 1.000, 1)
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("i_eyes")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblCloseEyes" type="Label" parent="HBox/InfoBox/TicketBox/ChipCloseEyes/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.685, 0.905, 1.000, 1)
+theme_override_font_sizes/font_size = 12
+text = "2"

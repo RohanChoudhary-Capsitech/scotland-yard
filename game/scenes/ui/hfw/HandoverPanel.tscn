@@ -1,0 +1,112 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/HandoverPanel.gd" id="1_ho"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/phone.svg" id="3_phone"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_emblem"]
+bg_color = Color(0.545, 0.361, 0.965, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 1, 1, 0.9)
+corner_radius_top_left = 44
+corner_radius_top_right = 44
+corner_radius_bottom_right = 44
+corner_radius_bottom_left = 44
+corner_detail = 12
+
+[node name="HandoverPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_ho")
+
+[node name="OpaqueBackdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.039, 0.055, 0.106, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ModalPanel" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+theme_type_variation = &"PanelModal"
+
+[node name="VBox" type="VBoxContainer" parent="Center/ModalPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="EmblemCenter" type="CenterContainer" parent="Center/ModalPanel/VBox"]
+layout_mode = 2
+
+[node name="Emblem" type="Panel" parent="Center/ModalPanel/VBox/EmblemCenter"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_emblem")
+
+[node name="EmblemIcon" type="TextureRect" parent="Center/ModalPanel/VBox/EmblemCenter/Emblem"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = 22.0
+offset_right = -22.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_phone")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblTitle" type="Label" parent="Center/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelTitle"
+theme_override_font_sizes/font_size = 30
+text = "Pass the phone to
+Detective 1"
+horizontal_alignment = 1
+
+[node name="LblSubtitle" type="Label" parent="Center/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 16
+text = "Keep the screen hidden from other players!"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Spacer" type="Control" parent="Center/ModalPanel/VBox"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BtnStart" type="Button" parent="Center/ModalPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 58)
+layout_mode = 2
+theme_type_variation = &"ButtonPrimary"
+text = "I'm Detective 1, start my turn"

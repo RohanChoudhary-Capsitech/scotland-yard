@@ -1,0 +1,214 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/TopBar.gd" id="1_tb"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/target.svg" id="3_target"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/pause.svg" id="4_pause"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/detective.svg" id="5_det"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/eye.svg" id="6_eye"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
+bg_color = Color(1, 1, 1, 0.1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
+bg_color = Color(1, 0.761, 0.239, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="TopBar" type="Control"]
+custom_minimum_size = Vector2(0, 68)
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 68.0
+grow_horizontal = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_tb")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+
+[node name="HBox" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="LeftBox" type="HBoxContainer" parent="Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="RoundChip" type="PanelContainer" parent="Margin/HBox/LeftBox"]
+layout_mode = 2
+theme_type_variation = &"PanelBar"
+
+[node name="HBox" type="HBoxContainer" parent="Margin/HBox/LeftBox/RoundChip"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="RoundBox" type="VBoxContainer" parent="Margin/HBox/LeftBox/RoundChip/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="LblRoundCaps" type="Label" parent="Margin/HBox/LeftBox/RoundChip/HBox/RoundBox"]
+layout_mode = 2
+theme_type_variation = &"LabelCaps"
+theme_override_font_sizes/font_size = 10
+text = "ROUND"
+
+[node name="LblRound" type="Label" parent="Margin/HBox/LeftBox/RoundChip/HBox/RoundBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelNumber"
+theme_override_font_sizes/font_size = 20
+text = "1 / 24"
+
+[node name="Progress" type="ProgressBar" parent="Margin/HBox/LeftBox/RoundChip/HBox/RoundBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 4)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
+max_value = 24.0
+value = 1.0
+show_percentage = false
+
+[node name="Sep" type="ColorRect" parent="Margin/HBox/LeftBox/RoundChip/HBox"]
+custom_minimum_size = Vector2(1, 0)
+layout_mode = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.12)
+
+[node name="RevealBox" type="HBoxContainer" parent="Margin/HBox/LeftBox/RoundChip/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RevealIcon" type="TextureRect" parent="Margin/HBox/LeftBox/RoundChip/HBox/RevealBox"]
+unique_name_in_owner = true
+modulate = Color(1, 0.761, 0.239, 1)
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("6_eye")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RevealText" type="VBoxContainer" parent="Margin/HBox/LeftBox/RoundChip/HBox/RevealBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="LblRevealCaps" type="Label" parent="Margin/HBox/LeftBox/RoundChip/HBox/RevealBox/RevealText"]
+layout_mode = 2
+theme_type_variation = &"LabelCaps"
+theme_override_font_sizes/font_size = 10
+text = "MR. X SURFACES"
+
+[node name="LblNextReveal" type="Label" parent="Margin/HBox/LeftBox/RoundChip/HBox/RevealBox/RevealText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelGold"
+text = "Round 3"
+
+[node name="CenterBox" type="HBoxContainer" parent="Margin/HBox"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+
+[node name="TurnBadge" type="PanelContainer" parent="Margin/HBox/CenterBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_type_variation = &"PanelBar"
+
+[node name="HBox" type="HBoxContainer" parent="Margin/HBox/CenterBox/TurnBadge"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TurnIconBg" type="Panel" parent="Margin/HBox/CenterBox/TurnBadge/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(34, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="TurnIcon" type="TextureRect" parent="Margin/HBox/CenterBox/TurnBadge/HBox/TurnIconBg"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = -7.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_det")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TurnText" type="VBoxContainer" parent="Margin/HBox/CenterBox/TurnBadge/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="LblTurnCaps" type="Label" parent="Margin/HBox/CenterBox/TurnBadge/HBox/TurnText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelCaps"
+theme_override_font_sizes/font_size = 10
+text = "NOW PLAYING"
+
+[node name="LblTurn" type="Label" parent="Margin/HBox/CenterBox/TurnBadge/HBox/TurnText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelHeading"
+theme_override_font_sizes/font_size = 17
+text = "Detective 1"
+
+[node name="RightBox" type="HBoxContainer" parent="Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 2
+
+[node name="BtnFocus" type="Button" parent="Margin/HBox/RightBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "Focus on the active player"
+theme_type_variation = &"ButtonIcon"
+icon = ExtResource("3_target")
+icon_alignment = 1
+expand_icon = true
+
+[node name="BtnPause" type="Button" parent="Margin/HBox/RightBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_vertical = 0
+tooltip_text = "Pause"
+theme_type_variation = &"ButtonIcon"
+icon = ExtResource("4_pause")
+icon_alignment = 1
+expand_icon = true

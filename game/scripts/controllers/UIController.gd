@@ -41,4 +41,7 @@ func _on_ready() -> void:
 
 ## Closes this panel. UIManager.pop() calls queue_free() immediately (PDF §5).
 func close() -> void:
-	_ui_manager.pop()
+	if _ui_manager != null:
+		_ui_manager.pop()
+	else:
+		queue_free()

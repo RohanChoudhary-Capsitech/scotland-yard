@@ -52,3 +52,12 @@ A Scotland Yard–style hidden-movement digital board game developed in Godot 4 
 ## Game Rules & Modes
 
 For full game rules, ticket breakdowns, reveal schedules, and victory conditions, see [docs/RULES.md](file:///c:/Users/orcas/Documents/scotland-yard/docs/RULES.md).
+
+## Art pipeline (city map and UI)
+
+- **City background**: `game/scripts/utils/CityRenderer.gd` builds a low-poly 3D city from `map.json` (roads on every taxi/bus link, river through the ferry piers, parks, buildings, trees) and bakes it into `game/assets/sprites/backgrounds/city/City_*.png`. Needs a display:
+  `godot --path . --rendering-driver opengl3 -s res://game/scripts/utils/CityRenderer.gd`
+- **Board scene**: after changing `map.json` or re-rendering, rebuild `Board.tscn` with `BuildBoard.gd` in the editor (File > Run) or headless:
+  `godot --headless --path . -s res://game/scripts/utils/BuildBoardHeadless.gd`
+- **Sprites, theme, sounds**: `tools/generate_board_sprites.py`, `tools/generate_theme.py`, `tools/generate_sfx.py` (Python 3 + Pillow) regenerate pins/tokens/vehicles, `game/assets/Theme.tres` and the sound effects.
+- **Colours and icons** live in `game/scripts/utils/Palette.gd`; UI icons are SVGs in `game/assets/sprites/single/ui/icons/` (imported at 4x). Font: Inter (OFL, `game/assets/fonts/Inter-OFL.txt`).

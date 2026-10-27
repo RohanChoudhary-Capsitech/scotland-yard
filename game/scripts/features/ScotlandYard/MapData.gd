@@ -80,6 +80,9 @@ func load_from_file(path: String = "res://game/assets/data/map.json") -> bool:
 
 	return true
 
+func get_station_position(station_id: int) -> Vector2:
+	return stations.get(station_id, Vector2.ZERO)
+
 func _compute_all_pairs_distances() -> void:
 	_all_pairs_dist.clear()
 	for s_id in stations.keys():

@@ -18,23 +18,27 @@ color = Color(0.9, 0.95, 1, 0.7)
 script = ExtResource("1_atrok")
 
 [node name="Taxi" type="Sprite2D" parent="." unique_id=706569820]
+scale = Vector2(0.5, 0.5)
 visible = false
 texture = ExtResource("2_yqp1e")
 
 [node name="Bus" type="Sprite2D" parent="." unique_id=218906435]
+scale = Vector2(0.5, 0.5)
 visible = false
 texture = ExtResource("3_vivjk")
 
 [node name="Train" type="Sprite2D" parent="." unique_id=194454339]
+scale = Vector2(0.5, 0.5)
 visible = false
 texture = ExtResource("4_hau8x")
 
 [node name="Ferry" type="Sprite2D" parent="." unique_id=446391447]
+scale = Vector2(0.5, 0.5)
 visible = false
 texture = ExtResource("5_48x8g")
 
 [node name="Wake" type="GPUParticles2D" parent="Ferry" unique_id=1592505794]
-position = Vector2(-20, 0)
+position = Vector2(-36, 0)
 emitting = false
 amount = 16
 lifetime = 0.5

@@ -33,7 +33,8 @@ func pause() -> void:
 	if state != State.PLAYING:
 		return
 	state = State.PAUSED
-	get_tree().paused = true
+	if is_inside_tree() and get_tree() != null:
+		get_tree().paused = true
 	if _bus:
 		_bus.game_paused.emit()
 
@@ -41,18 +42,22 @@ func resume() -> void:
 	if state != State.PAUSED:
 		return
 	state = State.PLAYING
-	get_tree().paused = false
+	if is_inside_tree() and get_tree() != null:
+		get_tree().paused = false
 	if _bus:
 		_bus.game_resumed.emit()
 
 func game_over(reason: String = "") -> void:
 	state = State.GAME_OVER
-	get_tree().paused = false
+	if is_inside_tree() and get_tree() != null:
+		get_tree().paused = false
 	if _bus:
 		_bus.game_over.emit(reason)
 
 func reset() -> void:
 	state = State.IDLE
+	if is_inside_tree() and get_tree() != null:
+		get_tree().paused = false
 
 func is_playing() -> bool:
 	return state == State.PLAYING

@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/HUD.gd" id="1_hud"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/TopBar.tscn" id="2_topbar"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/PlayerDrawer.tscn" id="3_pdrawer"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/TravelLogDrawer.tscn" id="4_tldrawer"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/TicketPicker.tscn" id="5_tpicker"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/Toast.tscn" id="6_toast"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="RootMargin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="HUDContainer" type="Control" parent="RootMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TopBar" parent="RootMargin/HUDContainer" instance=ExtResource("2_topbar")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="PlayerDrawer" parent="RootMargin/HUDContainer" instance=ExtResource("3_pdrawer")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="TravelLogDrawer" parent="RootMargin/HUDContainer" instance=ExtResource("4_tldrawer")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="TicketPicker" parent="RootMargin/HUDContainer" instance=ExtResource("5_tpicker")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Toast" parent="RootMargin/HUDContainer" instance=ExtResource("6_toast")]
+unique_name_in_owner = true
+layout_mode = 1

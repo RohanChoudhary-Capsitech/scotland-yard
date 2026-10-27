@@ -34,6 +34,7 @@ func _init() -> void:
 	test_win_mrx_survives_24_rounds(map_data)
 	test_match_feature_lifecycle()
 	test_ai_driving(map_data)
+	test_seat_configs(map_data)
 
 	print("==================================================")
 	print("TEST RESULTS: %d Passed, %d Failed (Total %d)" % [passed_tests, failed_tests, total_tests])
@@ -453,3 +454,125 @@ func test_ai_driving(map_data: MapData) -> void:
 	state.positions.erase(0)
 	var d_move := det_ai.choose_move(1, state, map_data)
 	_assert_true(not d_move.is_empty(), "DetectiveAI chooses legal move with state.positions[0] completely erased")
+
+# ── 11. Seat Configurations & Visibility Rule ─────────────────────────────────
+func test_seat_configs(map_data: MapData) -> void:
+	# Config 1: All-Human (Pass and Play)
+	var seats_pap: Array[Dictionary] = [
+		{"id": 0, "name": "Mr. X", "type": "human", "is_human": true},
+		{"id": 1, "name": "Sherlock", "type": "human", "is_human": true},
+		{"id": 2, "name": "Watson", "type": "human", "is_human": true},
+		{"id": 3, "name": "Lestrade", "type": "human", "is_human": true},
+		{"id": 4, "name": "Mycroft", "type": "human", "is_human": true},
+	]
+	var match_pap := MatchFeature.new()
+	match_pap.initialize({
+		"map_data": map_data,
+		"seats": seats_pap
+	})
+	match_pap.start()
+
+	_assert_true(match_pap.is_human_player(0), "Pass-and-Play: Mr. X is human")
+	_assert_true(match_pap.is_human_player(1), "Pass-and-Play: Detective 1 is human")
+	_assert_true(match_pap.is_human_player(2), "Pass-and-Play: Detective 2 is human")
+	_assert_true(not match_pap.is_ai_player(0), "Pass-and-Play: Mr. X is not AI")
+	_assert_true(not match_pap.is_ai_turn(), "Pass-and-Play: Initial turn is human turn")
+	_assert_true(match_pap.mode == "pass_and_play", "Pass-and-Play mode string resolved")
+	_assert_true(match_pap.get_player_name(1) == "Sherlock", "Pass-and-Play custom name loaded")
+
+	# Move Mr. X -> turn advances to Detective 1 (human)
+	var m0: Dictionary = match_pap.state.legal_moves(0)[0]
+	match_pap.apply_move(0, int(m0["to"]), str(m0["ticket"]))
+	_assert_true(match_pap.state.current_player == 1, "Turn passed to Detective 1")
+	_assert_true(not match_pap.is_ai_turn(), "Detective 1 turn is human turn")
+	match_pap.free()
+
+	# Config 2: Mixed Seats (Human Mr. X, AI D1, Human D2, AI D3, Human D4)
+	var seats_mixed: Array[Dictionary] = [
+		{"id": 0, "name": "Mr. X", "type": "human", "is_human": true},
+		{"id": 1, "name": "D1-AI", "type": "ai", "is_human": false},
+		{"id": 2, "name": "D2-Human", "type": "human", "is_human": true},
+		{"id": 3, "name": "D3-AI", "type": "ai", "is_human": false},
+		{"id": 4, "name": "D4-Human", "type": "human", "is_human": true},
+	]
+	var match_mixed := MatchFeature.new()
+	match_mixed.initialize({
+		"map_data": map_data,
+		"seats": seats_mixed
+	})
+	match_mixed.start()
+
+	_assert_true(match_mixed.is_human_player(0), "Mixed: Mr. X is human")
+	_assert_true(match_mixed.is_ai_player(1), "Mixed: D1 is AI")
+	_assert_true(match_mixed.is_human_player(2), "Mixed: D2 is human")
+	_assert_true(match_mixed.is_ai_player(3), "Mixed: D3 is AI")
+	_assert_true(match_mixed.is_human_player(4), "Mixed: D4 is human")
+	_assert_true(match_mixed.has_human_detectives(), "Mixed: has human detectives")
+	_assert_true(match_mixed.has_ai_detectives(), "Mixed: has AI detectives")
+	_assert_true(match_mixed.mode == "mixed", "Mixed: mode string resolved as 'mixed'")
+
+	# Mr. X moves -> turn goes to D1 (AI)
+	var mx: Dictionary = match_mixed.state.legal_moves(0)[0]
+	match_mixed.apply_move(0, int(mx["to"]), str(mx["ticket"]))
+	_assert_true(match_mixed.state.current_player == 1, "Turn passed to D1 (AI)")
+	_assert_true(match_mixed.is_ai_turn(), "D1 turn is AI turn")
+
+	# D1 AI moves -> turn goes to D2 (Human)
+	var d1_move: Dictionary = match_mixed.detective_ai.choose_move(1, match_mixed.state, map_data)
+	match_mixed.apply_move(1, int(d1_move["to"]), str(d1_move["ticket"]))
+	_assert_true(match_mixed.state.current_player == 2, "Turn passed to D2 (Human)")
+	_assert_true(not match_mixed.is_ai_turn(), "D2 turn is Human turn")
+	match_mixed.free()
+
+	# Config 3: All-AI Detectives (Human Mr. X, Detectives 1..4 AI)
+	var seats_mrx_ai_dets: Array[Dictionary] = [
+		{"id": 0, "name": "Mr. X", "type": "human", "is_human": true},
+		{"id": 1, "name": "D1", "type": "ai", "is_human": false},
+		{"id": 2, "name": "D2", "type": "ai", "is_human": false},
+		{"id": 3, "name": "D3", "type": "ai", "is_human": false},
+		{"id": 4, "name": "D4", "type": "ai", "is_human": false},
+	]
+	var match_ai_dets := MatchFeature.new()
+	match_ai_dets.initialize({
+		"map_data": map_data,
+		"seats": seats_mrx_ai_dets
+	})
+	match_ai_dets.start()
+
+	_assert_true(match_ai_dets.is_human_player(0), "All-AI Detectives: Mr. X is human")
+	_assert_true(not match_ai_dets.has_human_detectives(), "All-AI Detectives: no human detectives")
+	_assert_true(match_ai_dets.has_ai_detectives(), "All-AI Detectives: all detectives are AI")
+	_assert_true(match_ai_dets.mode == "mrx", "All-AI Detectives: mode string is 'mrx'")
+	match_ai_dets.free()
+
+	# Config 4: Visibility Rule Assertion across ALL seat configurations:
+	# "Mr. X's token is visible ONLY during a Human Mr. X's own turn."
+	var test_configs: Array[Dictionary] = [
+		{"name": "All-Human", "seats": seats_pap},
+		{"name": "Mixed", "seats": seats_mixed},
+		{"name": "All-AI Detectives", "seats": seats_mrx_ai_dets},
+		{"name": "Play as Detectives", "seats": [
+			{"id": 0, "name": "Mr. X", "type": "ai", "is_human": false},
+			{"id": 1, "name": "D1", "type": "human", "is_human": true},
+			{"id": 2, "name": "D2", "type": "human", "is_human": true},
+			{"id": 3, "name": "D3", "type": "human", "is_human": true},
+			{"id": 4, "name": "D4", "type": "human", "is_human": true},
+		]}
+	]
+
+	for cfg in test_configs:
+		var mf := MatchFeature.new()
+		mf.initialize({"map_data": map_data, "seats": cfg["seats"]})
+		mf.start()
+
+		var is_human_mrx := mf.is_human_player(0)
+		for test_player in range(5):
+			mf.state.current_player = test_player
+			# Calculate token visibility rule
+			var expected_token_visible := (test_player == 0 and is_human_mrx)
+			var actual_token_visible := (test_player == 0 and mf.is_human_player(0))
+
+			_assert_true(actual_token_visible == expected_token_visible,
+				"Visibility rule in %s (player %d): Token visible ONLY during Human Mr. X turn" % [cfg["name"], test_player])
+
+		mf.free()

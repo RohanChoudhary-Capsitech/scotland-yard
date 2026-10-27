@@ -1,0 +1,162 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/GameOverPanel.gd" id="1_go"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/trophy.svg" id="3_trophy"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/refresh.svg" id="4_refresh"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/home.svg" id="5_home"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_emblem"]
+bg_color = Color(0.231, 0.769, 0.541, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 1, 1, 0.9)
+corner_radius_top_left = 48
+corner_radius_top_right = 48
+corner_radius_bottom_right = 48
+corner_radius_bottom_left = 48
+corner_detail = 12
+shadow_color = Color(0.231, 0.769, 0.541, 0.5)
+shadow_size = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_route"]
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 0.05)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="GameOverPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_go")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.07, 0.78)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ModalPanel" type="PanelContainer" parent="Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+theme_type_variation = &"PanelModal"
+
+[node name="VBox" type="VBoxContainer" parent="Center/ModalPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="EmblemCenter" type="CenterContainer" parent="Center/ModalPanel/VBox"]
+layout_mode = 2
+
+[node name="Emblem" type="Panel" parent="Center/ModalPanel/VBox/EmblemCenter"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_emblem")
+
+[node name="EmblemIcon" type="TextureRect" parent="Center/ModalPanel/VBox/EmblemCenter/Emblem"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = 22.0
+offset_right = -22.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_trophy")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblWinner" type="Label" parent="Center/ModalPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelTitle"
+theme_override_font_sizes/font_size = 38
+text = "DETECTIVES WIN!"
+horizontal_alignment = 1
+
+[node name="LblReason" type="Label" parent="Center/ModalPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 16
+text = "Detective 1 caught Mr. X at Station 45"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="RouteBox" type="PanelContainer" parent="Center/ModalPanel/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_route")
+
+[node name="VBox" type="VBoxContainer" parent="Center/ModalPanel/VBox/RouteBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="LblRouteTitle" type="Label" parent="Center/ModalPanel/VBox/RouteBox/VBox"]
+layout_mode = 2
+theme_type_variation = &"LabelCaps"
+text = "MR. X'S ESCAPE ROUTE"
+
+[node name="ScrollRoute" type="ScrollContainer" parent="Center/ModalPanel/VBox/RouteBox/VBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="LblRoute" type="Label" parent="Center/ModalPanel/VBox/RouteBox/VBox/ScrollRoute"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelGold"
+text = "35 → 48 → 62 → 81"
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="Center/ModalPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BtnHome" type="Button" parent="Center/ModalPanel/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Main Menu"
+icon = ExtResource("5_home")
+
+[node name="BtnPlayAgain" type="Button" parent="Center/ModalPanel/VBox/ButtonsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonPrimary"
+text = "Play Again"
+icon = ExtResource("4_refresh")

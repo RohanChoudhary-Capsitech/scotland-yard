@@ -25,6 +25,12 @@ signal player_moved(player_index: int, to_station: int, ticket: String)
 signal mrx_surfaced(station: int)
 signal round_changed(round: int)
 signal player_stuck(player_index: int)
+signal focus_requested
+signal toast_requested(message: String)
+signal mrx_gaze_started(target_pos: Vector2)
+signal mrx_gaze_ended
+signal mrx_closed_eyes
+signal pause_requested
 
 # ── Economy ───────────────────────────────────────────────────────────────
 signal coins_changed(new_amount: int)

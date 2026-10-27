@@ -39,7 +39,7 @@ _data = {
 script = ExtResource("1_vc6nq")
 
 [node name="Sprite" type="Sprite2D" parent="." unique_id=1736317881]
-modulate = Color(1, 0.09019608, 0.26666668, 1)
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_urtgc")
 
 [node name="Label" type="Label" parent="." unique_id=1432260920]

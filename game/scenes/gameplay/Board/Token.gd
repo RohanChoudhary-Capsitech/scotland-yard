@@ -5,15 +5,6 @@ extends Node2D
 ## Token — Visual player piece for Mr. X or Detectives.
 ## Supports tweened movement along paths and idle animations ("bob", "pulse").
 
-const COLORS: Dictionary = {
-	0: Color("#212121"), # Mr. X (Dark Charcoal)
-	1: Color("#E53935"), # Detective 1 (Red)
-	2: Color("#1E88E5"), # Detective 2 (Blue)
-	3: Color("#43A047"), # Detective 3 (Green)
-	4: Color("#FB8C00"), # Detective 4 (Orange)
-	5: Color("#8E24AA")  # Detective 5 (Purple)
-}
-
 @export var player_id: int = 0:
 	set = set_player_id
 
@@ -39,11 +30,15 @@ func _apply_style() -> void:
 	if _label_x == null:
 		_label_x = get_node_or_null("LabelX")
 
-	var col: Color = COLORS.get(player_id, Color.WHITE)
+	var col: Color = Palette.player(player_id) if player_id > 0 else Color("#1F1B2E")
 	if _disc != null:
 		_disc.modulate = col
 	if _label_x != null:
-		_label_x.visible = (player_id == 0)
+		_label_x.visible = false
+	var icon := get_node_or_null("Icon") as Sprite2D
+	if icon != null:
+		icon.texture = Palette.player_icon(player_id)
+		icon.modulate = Palette.player(0).lightened(0.35) if player_id == 0 else Color.WHITE
 
 ## Smoothly moves the token along a sequence of points using a Tween.
 func move_along(points: Array[Vector2], duration_per_hop: float = 0.35) -> Tween:

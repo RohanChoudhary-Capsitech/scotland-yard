@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://game/scenes/gameplay/Board/Board.gd" id="3_6j665"]
 [ext_resource type="Script" path="res://game/scripts/controllers/BoardCameraController.gd" id="4_3ebbj"]
 [ext_resource type="Script" path="res://game/scripts/features/ScotlandYard/MatchFeature.gd" id="5_ps6si"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/HUD.tscn" id="6_hud"]
 
 [node name="Match" type="Node2D" unique_id=1199315775]
 script = ExtResource("1_pcjip")
@@ -17,3 +18,5 @@ script = ExtResource("4_3ebbj")
 
 [node name="MatchFeature" type="Node" parent="." unique_id=1294413903]
 script = ExtResource("5_ps6si")
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]

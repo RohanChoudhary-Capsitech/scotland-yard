@@ -1,0 +1,251 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/TravelLogDrawer.gd" id="1_tl"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/LogSlot.tscn" id="3_slot"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/log.svg" id="4_log"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/chevron_right.svg" id="5_right"]
+[ext_resource type="Texture2D" path="res://game/assets/sprites/single/ui/icons/mask.svg" id="6_mask"]
+
+[node name="TravelLogDrawer" type="Control"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 3
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -74.0
+offset_top = 78.0
+offset_right = -10.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_tl")
+
+[node name="MainPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="CollapsedView" type="VBoxContainer" parent="MainPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BtnExpand" type="Button" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+tooltip_text = "Mr. X travel log"
+theme_type_variation = &"ButtonIcon"
+icon = ExtResource("4_log")
+icon_alignment = 1
+expand_icon = true
+
+[node name="LblLogHeader" type="Label" parent="MainPanel/CollapsedView"]
+layout_mode = 2
+theme_type_variation = &"LabelCaps"
+theme_override_font_sizes/font_size = 10
+text = "LAST"
+horizontal_alignment = 1
+
+[node name="LastTicketChip" type="PanelContainer" parent="MainPanel/CollapsedView"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PanelChip"
+
+[node name="VBox" type="VBoxContainer" parent="MainPanel/CollapsedView/LastTicketChip"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="LastTicketIcon" type="TextureRect" parent="MainPanel/CollapsedView/LastTicketChip/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblLastTicket" type="Label" parent="MainPanel/CollapsedView/LastTicketChip/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "—"
+horizontal_alignment = 1
+
+[node name="ExpandedView" type="VBoxContainer" parent="MainPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderHBox" type="HBoxContainer" parent="MainPanel/ExpandedView"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnCollapse" type="Button" parent="MainPanel/ExpandedView/HeaderHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+tooltip_text = "Hide log"
+theme_type_variation = &"ButtonGhost"
+icon = ExtResource("5_right")
+icon_alignment = 1
+expand_icon = true
+
+[node name="Icon" type="TextureRect" parent="MainPanel/ExpandedView/HeaderHBox"]
+modulate = Color(0.545, 0.361, 0.965, 1)
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("6_mask")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LblTitle" type="Label" parent="MainPanel/ExpandedView/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LabelCaps"
+theme_override_font_sizes/font_size = 13
+text = "MR. X TRAVEL LOG"
+
+[node name="Scroll" type="ScrollContainer" parent="MainPanel/ExpandedView"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Grid" type="GridContainer" parent="MainPanel/ExpandedView/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 4
+
+[node name="LogSlot_1" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 1
+
+[node name="LogSlot_2" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 2
+
+[node name="LogSlot_3" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 3
+
+[node name="LogSlot_4" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 4
+
+[node name="LogSlot_5" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 5
+
+[node name="LogSlot_6" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 6
+
+[node name="LogSlot_7" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 7
+
+[node name="LogSlot_8" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 8
+
+[node name="LogSlot_9" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 9
+
+[node name="LogSlot_10" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 10
+
+[node name="LogSlot_11" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 11
+
+[node name="LogSlot_12" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 12
+
+[node name="LogSlot_13" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 13
+
+[node name="LogSlot_14" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 14
+
+[node name="LogSlot_15" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 15
+
+[node name="LogSlot_16" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 16
+
+[node name="LogSlot_17" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 17
+
+[node name="LogSlot_18" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 18
+
+[node name="LogSlot_19" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 19
+
+[node name="LogSlot_20" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 20
+
+[node name="LogSlot_21" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 21
+
+[node name="LogSlot_22" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 22
+
+[node name="LogSlot_23" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 23
+
+[node name="LogSlot_24" parent="MainPanel/ExpandedView/Scroll/Grid" instance=ExtResource("3_slot")]
+layout_mode = 2
+size_flags_horizontal = 3
+round_number = 24
