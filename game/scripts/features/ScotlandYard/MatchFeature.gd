@@ -19,6 +19,7 @@ var seats: Array[Dictionary] = [] # [{ "id": int, "name": String, "type": "human
 var detective_count: int = 4
 var auto_play_ai: bool = false   # When true, automatically steps AI turns until next human turn
 var tells_enabled: bool = false
+var tutorial_lesson: int = 0
 
 var mode: String:
 	get:
@@ -74,6 +75,37 @@ func initialize(deps: Dictionary) -> void:
 	auto_play_ai = bool(deps.get("auto_play_ai", false))
 	tells_enabled = bool(deps.get("tells_enabled", false))
 
+	# Load level info if specified
+	var level_id: String = str(deps.get("level", deps.get("level_id", "")))
+	var level_data: Dictionary = {}
+	if deps.has("level_data") and deps["level_data"] is Dictionary:
+		level_data = deps["level_data"]
+	elif not level_id.is_empty() and level_id != "city":
+		var levels_file := "res://game/assets/data/levels.json"
+		if FileAccess.file_exists(levels_file):
+			var lf := FileAccess.open(levels_file, FileAccess.READ)
+			if lf != null:
+				var ljson := JSON.new()
+				if ljson.parse(lf.get_as_text()) == OK and ljson.data is Dictionary:
+					level_data = (ljson.data as Dictionary).get(level_id, {})
+
+	var level_rounds: int = int(level_data.get("rounds", 24))
+	var level_reveals: Array[int] = []
+	for r in level_data.get("reveal_rounds", []):
+		level_reveals.append(int(r))
+	var level_tickets: Dictionary = level_data.get("tickets", {})
+	var level_mrx_starts: Array[int] = []
+	for s in level_data.get("mrx_start_stations", []):
+		level_mrx_starts.append(int(s))
+	var level_det_starts: Array[int] = []
+	for s in level_data.get("detective_start_stations", []):
+		level_det_starts.append(int(s))
+	var level_starts: Array[int] = []
+	for s in level_data.get("start_stations", []):
+		level_starts.append(int(s))
+
+	var default_det_count: int = int(level_data.get("detective_count", 4)) if not level_data.is_empty() else 4
+
 	# Setup seats (authoritative seat configuration)
 	if deps.has("seats") and deps["seats"] != null and not deps["seats"].is_empty():
 		seats = []
@@ -86,23 +118,51 @@ func initialize(deps: Dictionary) -> void:
 					"type": "human" if is_h else "ai",
 					"is_human": is_h
 				})
-		detective_count = maxi(3, seats.size() - 1)
+		detective_count = clampi(seats.size() - 1, 2, 5)
 	elif deps.has("mode"):
 		var m_str: String = str(deps.get("mode", "detectives"))
-		detective_count = int(deps.get("detectives", 4))
+		detective_count = clampi(int(deps.get("detectives", default_det_count)), 2, 5)
 		seats = _build_seats_from_mode(m_str, detective_count)
 	else:
-		detective_count = int(deps.get("detectives", 4))
+		detective_count = clampi(int(deps.get("detectives", default_det_count)), 2, 5)
 		seats = _build_seats_from_mode("detectives", detective_count)
 
 	if deps.has("map_data") and deps["map_data"] != null:
 		map_data = deps["map_data"] as MapData
 	else:
-		var map_path: String = "res://game/assets/data/map.json"
-		map_data = MapData.new(map_path)
-	state = SYGameState.new(map_data, detective_count)
+		map_data = MapData.new("")
+		if not level_id.is_empty() and level_id != "city":
+			map_data.load_level(level_id)
+		else:
+			map_data.load_from_file("res://game/assets/data/map.json")
+
+	state = SYGameState.new(
+		map_data,
+		detective_count,
+		level_starts,
+		level_rounds,
+		level_reveals,
+		level_tickets,
+		level_mrx_starts,
+		level_det_starts
+	)
+	tutorial_lesson = int(deps.get("tutorial_lesson", 0))
 	mrx_ai = MrXAI.new()
 	detective_ai = DetectiveAI.new()
+	if tutorial_lesson > 0 or level_id == "tutorial":
+		mrx_ai.easy_mode = true
+		detective_ai.easy_mode = true
+
+	if tutorial_lesson == 1:
+		state.positions[0] = 26
+		state.positions[1] = 18
+		state.positions[2] = 10
+	elif tutorial_lesson == 2:
+		state.positions[0] = 47
+		state.positions[1] = 1
+		state.positions[2] = 24
+		state.max_rounds = 6
+
 	ai_gaze = AIGaze.new(map_data, state, mrx_ai)
 	player_gaze = PlayerGaze.new(map_data)
 	detective_ai.tells_enabled = tells_enabled

@@ -21,6 +21,16 @@ const REVEAL_ROUNDS: Array[int] = [3, 8, 13, 18, 24]
 var _bus: Node
 var _current_round: int = 1
 var _player_names: Dictionary = {}
+var max_rounds: int = 24
+var reveal_rounds: Array[int] = [3, 8, 13, 18, 24]
+
+func set_rules(p_max_rounds: int, p_reveal_rounds: Array[int]) -> void:
+	max_rounds = p_max_rounds if p_max_rounds > 0 else 24
+	if not p_reveal_rounds.is_empty():
+		reveal_rounds = p_reveal_rounds.duplicate()
+	if _progress != null:
+		_progress.max_value = max_rounds
+	update_round(_current_round)
 
 func inject_services(registry: Node) -> void:
 	if not registry:
@@ -72,13 +82,14 @@ func _on_turn_started(p: int) -> void:
 func update_round(r: int) -> void:
 	_current_round = r
 	if _lbl_round != null:
-		_lbl_round.text = "%d / 24" % r
+		_lbl_round.text = "%d / %d" % [r, max_rounds]
 	if _progress != null:
+		_progress.max_value = max_rounds
 		_progress.value = r
 
 	if _lbl_next_reveal != null:
 		var next_rev: int = -1
-		for rev in REVEAL_ROUNDS:
+		for rev in reveal_rounds:
 			if rev >= r:
 				next_rev = rev
 				break

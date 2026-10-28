@@ -4,8 +4,12 @@ extends RefCounted
 ## MrXAI — Autonomous AI decision maker for Mr. X in Scotland Yard.
 ## Uses only MapData and SYGameState data.
 
+var easy_mode: bool = false
+
 ## Evaluates whether Mr. X should play a double-move card this turn.
 func choose_double_move(state: SYGameState, map_data: MapData) -> bool:
+	if easy_mode:
+		return false
 	if state.game_over or state.current_player != 0 or state.double_move_phase != 0:
 		return false
 	if state.tickets[0].get("double", 0) <= 0:
@@ -45,7 +49,7 @@ func choose_double_move(state: SYGameState, map_data: MapData) -> bool:
 		if dist >= 0 and dist < cur_min_dist:
 			cur_min_dist = dist
 
-	var right_after_reveal: bool = (state.round - 1) in SYGameState.REVEAL_ROUNDS
+	var right_after_reveal: bool = state.is_reveal_round(state.round - 1)
 
 	# Trigger double move:
 	# 1) When best single move still leaves a detective 1 step away (best_single_dist <= 1)
@@ -65,7 +69,7 @@ func choose_move(state: SYGameState, map_data: MapData) -> Dictionary:
 		return {}
 
 	var cur_pos: int = state.positions.get(0, 0)
-	var right_after_reveal: bool = (state.round - 1) in SYGameState.REVEAL_ROUNDS
+	var right_after_reveal: bool = state.is_reveal_round(state.round - 1)
 
 	# Collect all stations that any detective can reach next turn
 	var det_reachable: Dictionary = {}
@@ -82,6 +86,10 @@ func choose_move(state: SYGameState, map_data: MapData) -> Dictionary:
 			safer_moves.append(m)
 
 	var candidate_moves: Array[Dictionary] = safer_moves if not safer_moves.is_empty() else legal
+
+	if easy_mode:
+		var idx: int = randi() % candidate_moves.size()
+		return candidate_moves[idx]
 
 	# Score candidate moves
 	var best_score: float = -999999.0

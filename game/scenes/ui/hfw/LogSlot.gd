@@ -27,6 +27,15 @@ func setup(round_num: int) -> void:
 
 	_apply_border_style(false)
 
+func setup_rules(round_num: int, rev_rounds: Array[int]) -> void:
+	round_number = round_num
+	_is_reveal_round = (round_number in rev_rounds)
+
+	if _lbl_round != null:
+		_lbl_round.text = "R%d" % round_number
+
+	_apply_border_style(false)
+
 func _apply_border_style(has_entry: bool) -> void:
 	var base_style := get_theme_stylebox("panel") as StyleBoxFlat
 	if base_style == null:

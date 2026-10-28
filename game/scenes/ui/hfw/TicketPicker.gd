@@ -19,6 +19,18 @@ signal close_eyes_requested
 @onready var _btn_close_eyes: Button = %BtnCloseEyes
 @onready var _btn_cancel: Button = %BtnCancel
 
+var btn_black: Button:
+	get: return _btn_black
+
+var chk_double_move: CheckBox:
+	get: return _chk_double_move
+
+var btn_taxi: Button:
+	get: return _btn_taxi
+
+var btn_bus: Button:
+	get: return _btn_bus
+
 var _target_station: int = 0
 var _anim_tween: Tween = null
 

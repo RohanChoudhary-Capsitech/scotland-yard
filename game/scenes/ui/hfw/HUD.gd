@@ -13,6 +13,7 @@ extends CanvasLayer
 @onready var travel_log_drawer: TravelLogDrawer = %TravelLogDrawer
 @onready var ticket_picker: TicketPicker = %TicketPicker
 @onready var toast: Toast = %Toast
+@onready var coach_mark = %CoachMark
 
 var _state: SYGameState
 var _mode: Variant = "detectives"
@@ -81,6 +82,8 @@ func configure_hud(state: SYGameState, mode: Variant, detective_count: int, bus:
 	if top_bar != null:
 		top_bar.set_bus(_bus)
 		top_bar.set_player_names(_player_names)
+		if _state != null:
+			top_bar.set_rules(_state.max_rounds, _state.reveal_rounds)
 		top_bar.update_round(_state.round)
 		top_bar.update_turn(_state.current_player)
 

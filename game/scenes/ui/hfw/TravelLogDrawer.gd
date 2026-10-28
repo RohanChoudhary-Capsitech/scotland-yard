@@ -64,6 +64,14 @@ func _check_initial_responsive_state() -> void:
 func configure_match(state: SYGameState, mode: Variant) -> void:
 	_state = state
 	_mode = mode
+	if _state != null:
+		var max_r: int = _state.max_rounds
+		var revs: Array[int] = _state.reveal_rounds
+		for i in range(_log_slots.size()):
+			var slot := _log_slots[i]
+			slot.visible = (i < max_r)
+			if slot.has_method("setup_rules"):
+				slot.setup_rules(i + 1, revs)
 	update_ui()
 
 func update_ui(is_mrx_view: Variant = null) -> void:

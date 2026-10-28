@@ -51,11 +51,55 @@ func _ready() -> void:
 func _on_station_clicked(id: int) -> void:
 	station_clicked.emit(id)
 
+## Filters board elements (stations and links) to the specified active stations list.
+## Stations outside the active list are hidden and disabled from input.
+## Links connecting outside the active region are hidden.
+func apply_level_filter(active_station_ids: Array[int]) -> void:
+	_ensure_nodes()
+	var is_all: bool = active_station_ids.is_empty() or active_station_ids.size() >= 199
+	var active_set: Dictionary = {}
+	if not is_all:
+		for sid in active_station_ids:
+			active_set[sid] = true
+
+	# Filter stations
+	if _stations != null:
+		for child in _stations.get_children():
+			if child is Station:
+				var is_active: bool = is_all or active_set.has(child.id)
+				child.set_active_station(is_active)
+
+	# Filter links
+	var links_root := get_node_or_null("Links")
+	if links_root != null:
+		for group in links_root.get_children():
+			for child in group.get_children():
+				if child is Link:
+					var l := child as Link
+					var n_parts := l.name.split("_")
+					var is_active: bool = is_all
+					if not is_all and n_parts.size() >= 3:
+						var a := int(n_parts[1])
+						var b := int(n_parts[2])
+						is_active = active_set.has(a) and active_set.has(b)
+					l.set_active_link(is_active)
+
 func get_station(station_id: int) -> Station:
 	_ensure_nodes()
 	if _stations == null:
 		return null
 	return _stations.get_node_or_null("Station_%d" % station_id) as Station
+
+func has_station(station_id: int) -> bool:
+	return get_station(station_id) != null
+
+func get_last_seen_node() -> Node:
+	_ensure_nodes()
+	return _last_seen
+
+func get_spotlight_node() -> Node:
+	_ensure_nodes()
+	return _spotlight
 
 func get_station_position(station_id: int) -> Vector2:
 	var st := get_station(station_id)

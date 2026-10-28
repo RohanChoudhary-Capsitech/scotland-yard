@@ -185,6 +185,14 @@ size_flags_horizontal = 0
 text = "How to play"
 icon = ExtResource("8_help")
 
+[node name="BtnReplayTutorial" type="Button" parent="SafeAreaMargin/Layout/HBox/Hero"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Replay tutorial"
+icon = ExtResource("8_help")
+
 [node name="SetupCard" type="PanelContainer" parent="SafeAreaMargin/Layout/HBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(580, 0)
@@ -195,6 +203,55 @@ theme_type_variation = &"PanelModal"
 [node name="VBox" type="VBoxContainer" parent="SafeAreaMargin/Layout/HBox/SetupCard"]
 layout_mode = 2
 theme_override_constants/separation = 12
+
+[node name="LblLevelCaps" type="Label" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox"]
+layout_mode = 2
+theme_type_variation = &"LabelCaps"
+text = "MAP LEVEL"
+
+[node name="LevelsHBox" type="HBoxContainer" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnLevelTutorial" type="Button" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox/LevelsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonPill"
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "Tutorial"
+
+[node name="BtnLevelNeighbourhood" type="Button" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox/LevelsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonPill"
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "Neighbourhood"
+
+[node name="BtnLevelDistrict" type="Button" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox/LevelsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonPill"
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "District"
+
+[node name="BtnLevelCity" type="Button" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox/LevelsHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"ButtonPill"
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "City"
 
 [node name="LblModeCaps" type="Label" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox"]
 layout_mode = 2
@@ -236,6 +293,7 @@ text = "Pass & Play"
 icon = ExtResource("6_phone")
 
 [node name="CountHBox" type="HBoxContainer" parent="SafeAreaMargin/Layout/HBox/SetupCard/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 

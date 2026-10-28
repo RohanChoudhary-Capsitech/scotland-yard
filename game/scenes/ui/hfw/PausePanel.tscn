@@ -68,6 +68,13 @@ layout_mode = 2
 text = "How to play"
 icon = ExtResource("4_help")
 
+[node name="BtnReplayTutorial" type="Button" parent="Center/ModalPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Replay tutorial"
+icon = ExtResource("4_help")
+
 [node name="BtnQuit" type="Button" parent="Center/ModalPanel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)

@@ -11,31 +11,53 @@ var map_data: MapData
 
 var positions: Dictionary = {}         # player_index (int) -> station_id (int)
 var tickets: Dictionary = {}           # player_index (int) -> { ticket_type (String) -> count (int) }
-var round: int = 1                     # 1..24
+var round: int = 1                     # 1..max_rounds
 var current_player: int = 0            # 0 = Mr. X, 1..detective_count = Detectives
-var detective_count: int = 4           # 3..5
+var detective_count: int = 4           # 2..5
 var double_move_phase: int = 0         # 0 = normal, 1 = first move made in double move, 2 = second move made
-var close_eyes_cards: int = 2          # Mr. X gets 2 Close Eyes cards per match
+var close_eyes_cards: int = 2          # Mr. X gets Close Eyes cards per match
 var mrx_start_station: int = 0         # Initial starting station of Mr. X
 var mrx_move_log: Array[Dictionary] = [] # [{ "round": int, "ticket": String, "station": int, "revealed": bool }]
 var last_revealed_position: int = 0
 var last_skipped_detectives: Array[int] = [] # Detectives skipped in the last transition
 
+var max_rounds: int = MAX_ROUNDS
+var reveal_rounds: Array[int] = [3, 8, 13, 18, 24]
+
 var game_over: bool = false
 var winner: String = ""                # "detectives" or "mrx"
 var reason: String = ""
 
-func _init(p_map_data: MapData = null, p_detective_count: int = 4, p_start_stations: Array[int] = []) -> void:
+func _init(
+	p_map_data: MapData = null,
+	p_detective_count: int = 4,
+	p_start_stations: Array[int] = [],
+	p_max_rounds: int = 24,
+	p_reveal_rounds: Array[int] = [],
+	p_tickets: Dictionary = {},
+	p_mrx_starts: Array[int] = [],
+	p_det_starts: Array[int] = []
+) -> void:
 	if p_map_data != null:
-		setup_new_game(p_map_data, p_detective_count, p_start_stations)
+		setup_new_game(p_map_data, p_detective_count, p_start_stations, p_max_rounds, p_reveal_rounds, p_tickets, p_mrx_starts, p_det_starts)
 
-func setup_new_game(p_map_data: MapData, p_detective_count: int = 4, p_start_stations: Array[int] = []) -> void:
+func setup_new_game(
+	p_map_data: MapData,
+	p_detective_count: int = 4,
+	p_start_stations: Array[int] = [],
+	p_max_rounds: int = 24,
+	p_reveal_rounds: Array[int] = [],
+	p_tickets: Dictionary = {},
+	p_mrx_starts: Array[int] = [],
+	p_det_starts: Array[int] = []
+) -> void:
 	map_data = p_map_data
-	detective_count = clampi(p_detective_count, 3, 5)
+	detective_count = clampi(p_detective_count, 2, 5)
+	max_rounds = p_max_rounds if p_max_rounds > 0 else MAX_ROUNDS
+	reveal_rounds = p_reveal_rounds.duplicate() if not p_reveal_rounds.is_empty() else REVEAL_ROUNDS.duplicate()
 	round = 1
 	current_player = 0
 	double_move_phase = 0
-	close_eyes_cards = 2
 	mrx_move_log.clear()
 	last_revealed_position = 0
 	last_skipped_detectives.clear()
@@ -44,42 +66,56 @@ func setup_new_game(p_map_data: MapData, p_detective_count: int = 4, p_start_sta
 	reason = ""
 
 	# 1. Setup Tickets
-	# Mr. X: 4 taxi, 3 bus, 3 underground, black = detective_count, 2 double-move cards, 2 close-eyes cards
-	tickets[0] = {
-		"taxi": 4,
-		"bus": 3,
-		"underground": 3,
-		"black": detective_count,
-		"double": 2,
-		"close_eyes": 2,
-	}
+	var mrx_cfg: Dictionary = p_tickets.get("mrx", {}) if not p_tickets.is_empty() else {}
+	var det_cfg: Dictionary = p_tickets.get("detectives", {}) if not p_tickets.is_empty() else {}
 
-	# Detectives: 10 taxi, 8 bus, 4 underground
+	tickets[0] = {
+		"taxi": int(mrx_cfg.get("taxi", 4)),
+		"bus": int(mrx_cfg.get("bus", 3)),
+		"underground": int(mrx_cfg.get("underground", 3)),
+		"black": int(mrx_cfg.get("black", detective_count)),
+		"double": int(mrx_cfg.get("double", 2)),
+		"close_eyes": int(mrx_cfg.get("close_eyes", 2)),
+	}
+	close_eyes_cards = tickets[0]["close_eyes"]
+
 	for d in range(1, detective_count + 1):
 		tickets[d] = {
-			"taxi": 10,
-			"bus": 8,
-			"underground": 4,
+			"taxi": int(det_cfg.get("taxi", 10)),
+			"bus": int(det_cfg.get("bus", 8)),
+			"underground": int(det_cfg.get("underground", 4)),
 			"black": 0,
 			"double": 0,
 			"close_eyes": 0,
 		}
 
 	# 2. Setup Starting Stations
-	# Distinct starting stations picked from 18 start stations
-	var available_starts: Array[int] = []
-	if not p_start_stations.is_empty():
-		available_starts = p_start_stations.duplicate()
+	if not p_mrx_starts.is_empty() and not p_det_starts.is_empty():
+		var m_pool := p_mrx_starts.duplicate()
+		m_pool.shuffle()
+		positions[0] = m_pool[0]
+		var d_pool := p_det_starts.duplicate()
+		d_pool.shuffle()
+		# Ensure no detective starts on Mr. X's station
+		d_pool.erase(positions[0])
+		for d in range(1, detective_count + 1):
+			if not d_pool.is_empty():
+				positions[d] = d_pool.pop_front()
+			else:
+				positions[d] = d + 1
 	else:
-		available_starts = map_data.get_start_stations()
+		var available_starts: Array[int] = []
+		if not p_start_stations.is_empty():
+			available_starts = p_start_stations.duplicate()
+		else:
+			available_starts = map_data.get_start_stations()
 		available_starts.shuffle()
 
-	# Assign Mr. X (0) and Detectives (1..detective_count)
-	for i in range(detective_count + 1):
-		if i < available_starts.size():
-			positions[i] = available_starts[i]
-		else:
-			positions[i] = i + 1
+		for i in range(detective_count + 1):
+			if i < available_starts.size():
+				positions[i] = available_starts[i]
+			else:
+				positions[i] = i + 1
 
 	mrx_start_station = positions.get(0, 0)
 
@@ -94,7 +130,7 @@ func get_mrx_route() -> Array[int]:
 	return route
 
 func is_reveal_round(r: int) -> bool:
-	return r in REVEAL_ROUNDS
+	return r in reveal_rounds
 
 ## Returns all legal moves for player as Array[Dictionary] of {"to": int, "ticket": String}.
 func legal_moves(player: int) -> Array[Dictionary]:
@@ -295,11 +331,11 @@ func _finish_round_detectives() -> void:
 		reason = "No detective can move"
 		return
 
-	# Check round limit: Mr. X survives 24 rounds
-	if round >= MAX_ROUNDS:
+	# Check round limit: Mr. X survives max_rounds
+	if round >= max_rounds:
 		game_over = true
 		winner = "mrx"
-		reason = "Mr. X survived 24 rounds"
+		reason = "Mr. X survived %d rounds" % max_rounds
 		return
 
 	# Advance to next round for Mr. X
@@ -345,11 +381,11 @@ func check_win() -> void:
 		reason = "No detective can move"
 		return
 
-	# 4. Has Mr. X survived all 24 rounds?
-	if round > MAX_ROUNDS:
+	# 4. Has Mr. X survived all rounds?
+	if round > max_rounds:
 		game_over = true
 		winner = "mrx"
-		reason = "Mr. X survived 24 rounds"
+		reason = "Mr. X survived %d rounds" % max_rounds
 		return
 
 ## Returns a deep clone of the current state.
@@ -357,6 +393,8 @@ func duplicate() -> SYGameState:
 	var copy := SYGameState.new()
 	copy.map_data = map_data
 	copy.detective_count = detective_count
+	copy.max_rounds = max_rounds
+	copy.reveal_rounds = reveal_rounds.duplicate()
 	copy.round = round
 	copy.current_player = current_player
 	copy.double_move_phase = double_move_phase

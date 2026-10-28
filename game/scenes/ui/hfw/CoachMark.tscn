@@ -1,0 +1,193 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://game/scenes/ui/hfw/CoachMark.gd" id="1_cm"]
+[ext_resource type="Theme" path="res://game/assets/Theme.tres" id="2_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_highlight"]
+bg_color = Color(1, 1, 1, 0.04)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.761, 0.239, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(1, 0.761, 0.239, 0.45)
+shadow_size = 14
+
+[node name="CoachMark" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_cm")
+
+[node name="TopShade" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+color = Color(0.02, 0.03, 0.07, 0.75)
+
+[node name="BottomShade" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+color = Color(0.02, 0.03, 0.07, 0.75)
+
+[node name="LeftShade" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+color = Color(0.02, 0.03, 0.07, 0.75)
+
+[node name="RightShade" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+color = Color(0.02, 0.03, 0.07, 0.75)
+
+[node name="TargetHighlight" type="Panel" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_highlight")
+
+[node name="TextBubble" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 0
+theme_type_variation = &"PanelModal"
+
+[node name="VBox" type="VBoxContainer" parent="TextBubble"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HeaderHBox" type="HBoxContainer" parent="TextBubble/VBox"]
+layout_mode = 2
+
+[node name="LblTitle" type="Label" parent="TextBubble/VBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"LabelTitle"
+theme_override_font_sizes/font_size = 19
+text = "Catch Mr. X"
+
+[node name="LblStepCounter" type="Label" parent="TextBubble/VBox/HeaderHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"LabelGold"
+theme_override_font_sizes/font_size = 13
+text = "Step 1 / 15"
+
+[node name="LblText" type="Label" parent="TextBubble/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Your goal is to catch Mr. X before round 8 ends. Land on his station to win."
+autowrap_mode = 3
+
+[node name="WhyContainer" type="VBoxContainer" parent="TextBubble/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BtnWhy" type="Button" parent="TextBubble/VBox/WhyContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"ButtonGhost"
+theme_override_font_sizes/font_size = 13
+text = "Why does this matter? ▾"
+
+[node name="LblWhy" type="Label" parent="TextBubble/VBox/WhyContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+theme_type_variation = &"LabelMuted"
+theme_override_font_sizes/font_size = 13
+text = "If Mr. X stays free through round 8, he wins the match."
+autowrap_mode = 3
+
+[node name="FooterHBox" type="HBoxContainer" parent="TextBubble/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnBack" type="Button" parent="TextBubble/VBox/FooterHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(85, 42)
+layout_mode = 2
+text = "Back"
+
+[node name="Spacer" type="Control" parent="TextBubble/VBox/FooterHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BtnNext" type="Button" parent="TextBubble/VBox/FooterHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 42)
+layout_mode = 2
+theme_type_variation = &"ButtonPrimary"
+text = "Next"
+
+[node name="BtnSkip" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 46)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 18.0
+offset_right = -20.0
+offset_bottom = 64.0
+grow_horizontal = 0
+text = "Skip tutorial"
+
+[node name="BtnShowMe" type="Button" parent="."]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(130, 44)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -65.0
+offset_top = -68.0
+offset_right = 65.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_type_variation = &"ButtonPrimary"
+text = "Show me"
+
+[node name="ConfirmBubble" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -170.0
+offset_top = 22.0
+offset_right = 170.0
+offset_bottom = 74.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_type_variation = &"PanelModal"
+
+[node name="LblConfirm" type="Label" parent="ConfirmBubble"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Nice! You used a bus ticket — 7 left."
+horizontal_alignment = 1

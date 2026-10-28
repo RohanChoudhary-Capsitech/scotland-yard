@@ -394,6 +394,109 @@ func get_custom(key: String, default_value: Variant = null) -> Variant:
 	return get_custom_data(key, default_value)
 
 # ==============================================================================
+# 🗺️ SCOTLAND YARD MAP LEVEL PROGRESSION
+# ==============================================================================
+
+const LEVEL_ORDER: Array[String] = ["tutorial", "neighbourhood", "district", "city"]
+
+## Returns the array of unlocked level IDs.
+## New players start with ["tutorial"]. Existing players keep ["tutorial", "neighbourhood", "district", "city"].
+func get_unlocked_levels() -> Array[String]:
+	var saved_unlocked = get_value("levels_unlocked", null)
+	if saved_unlocked is Array and not saved_unlocked.is_empty():
+		var res: Array[String] = []
+		for lvl in saved_unlocked:
+			res.append(str(lvl))
+		return res
+
+	# Check if this is an existing player save
+	var is_existing_player := false
+	if has("match_mode") or has("seats") or has("detective_count") or has("games_played"):
+		is_existing_player = true
+	elif stats_data != null and stats_data.matches_played > 0:
+		is_existing_player = true
+	elif progression_data != null and progression_data.unlocked_levels > 1:
+		is_existing_player = true
+
+	var default_levels: Array[String] = []
+	if is_existing_player:
+		for lvl in LEVEL_ORDER:
+			default_levels.append(lvl)
+	else:
+		default_levels.append("tutorial")
+
+	set_value("levels_unlocked", default_levels)
+	save_game()
+	return default_levels
+
+## Checks if a specific level is currently unlocked.
+func is_level_unlocked(level_id: String) -> bool:
+	var unlocked := get_unlocked_levels()
+	return level_id in unlocked
+
+## Unlocks the next level in progression after current_level_id.
+## Returns the newly unlocked level ID, or empty string if all levels are already unlocked.
+func unlock_next_level(current_level_id: String) -> String:
+	var unlocked := get_unlocked_levels()
+	var idx := LEVEL_ORDER.find(current_level_id)
+	if idx >= 0 and idx + 1 < LEVEL_ORDER.size():
+		var next_lvl := LEVEL_ORDER[idx + 1]
+		if not unlocked.has(next_lvl):
+			unlocked.append(next_lvl)
+			set_value("levels_unlocked", unlocked)
+			save_game()
+			return next_lvl
+	return ""
+
+## Gets the currently selected level ID.
+func get_selected_level() -> String:
+	var sel = get_value("selected_level", null)
+	if sel is String and not str(sel).is_empty():
+		return str(sel)
+	var unlocked := get_unlocked_levels()
+	if unlocked.has("city"):
+		return "city"
+	return unlocked.back() if not unlocked.is_empty() else "tutorial"
+
+## Sets and persists the selected level ID.
+func set_selected_level(level_id: String) -> void:
+	set_value("selected_level", level_id)
+	save_game()
+
+# ==============================================================================
+# 🎓 TUTORIAL PROGRESSION
+# ==============================================================================
+
+## Returns true if the user has completed the tutorial.
+func is_tutorial_completed() -> bool:
+	var val = get_value("tutorial_completed", null)
+	if val != null:
+		return bool(val)
+	# Check if existing player who already unlocked later levels or played matches
+	var unlocked := get_unlocked_levels()
+	if unlocked.size() > 1 or unlocked.has("neighbourhood") or unlocked.has("city"):
+		return true
+	if has("games_played") or has("match_mode"):
+		return true
+	return false
+
+## Sets tutorial completion state and unlocks neighbourhood level if true.
+func set_tutorial_completed(completed: bool = true) -> void:
+	set_value("tutorial_completed", completed)
+	if completed:
+		unlock_next_level("tutorial")
+	save_game()
+
+## Gets current tutorial lesson (1 = Catch Mr. X, 2 = Escape, 0 = none/normal play).
+func get_tutorial_lesson() -> int:
+	return int(get_value("tutorial_lesson", 0))
+
+## Sets current tutorial lesson.
+func set_tutorial_lesson(lesson: int) -> void:
+	set_value("tutorial_lesson", lesson)
+	save_game()
+
+# ==============================================================================
 # 🛠️ GENERIC MUTATION HELPER
 # ==============================================================================
 

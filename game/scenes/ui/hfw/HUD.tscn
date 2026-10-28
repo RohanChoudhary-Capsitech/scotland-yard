@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/TravelLogDrawer.tscn" id="4_tldrawer"]
 [ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/TicketPicker.tscn" id="5_tpicker"]
 [ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/Toast.tscn" id="6_toast"]
+[ext_resource type="PackedScene" path="res://game/scenes/ui/hfw/CoachMark.tscn" id="7_coachmark"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -43,3 +44,8 @@ layout_mode = 1
 [node name="Toast" parent="RootMargin/HUDContainer" instance=ExtResource("6_toast")]
 unique_name_in_owner = true
 layout_mode = 1
+
+[node name="CoachMark" parent="RootMargin/HUDContainer" instance=ExtResource("7_coachmark")]
+unique_name_in_owner = true
+layout_mode = 1
+visible = false

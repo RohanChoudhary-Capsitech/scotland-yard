@@ -37,6 +37,15 @@ signal clicked(station_id: int)
 var _is_highlighted: bool = false
 var _press_screen_pos: Vector2 = Vector2.ZERO
 var _is_touch_pressed: bool = false
+var is_active_station: bool = true
+
+func set_active_station(active: bool) -> void:
+	is_active_station = active
+	visible = active
+	input_pickable = active
+	if not active:
+		_is_touch_pressed = false
+		set_highlighted(false)
 
 func _ensure_nodes() -> void:
 	if _base == null:
@@ -135,6 +144,8 @@ func _update_view() -> void:
 		_reset_pin_position()
 
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if not is_active_station:
+		return
 	# Safe Tap vs Pan: Only emit clicked if touch moved < 10px and camera is not dragging
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:

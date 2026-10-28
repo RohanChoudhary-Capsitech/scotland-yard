@@ -1,0 +1,231 @@
+{
+	"lesson_1": [
+		{
+			"id": "l1_goal",
+			"title": "Catch Mr. X",
+			"body": "Your goal is to catch Mr. X before round 8 ends. Land on his station to win.",
+			"why": "If Mr. X stays free through round 8, he wins the match.",
+			"target": "board",
+			"focus": [18, 10, 22],
+			"zoom": 1.05,
+			"action": "next"
+		},
+		{
+			"id": "l1_turn_order",
+			"title": "Turn Order",
+			"body": "Mr. X moves first in secret. Then each detective takes their turn in order.",
+			"why": "Watching who moves helps you track each detective closing in.",
+			"target": "hud",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l1_your_token",
+			"title": "Your Detective",
+			"body": "This is you at Station 18. You are Detective 1 leading the hunt.",
+			"why": "Keep track of your position to coordinate with your partner.",
+			"target": "player_token",
+			"focus": 18,
+			"zoom": 1.3,
+			"action": "next"
+		},
+		{
+			"id": "l1_move_taxi",
+			"title": "Moving by Taxi",
+			"body": "Yellow roads are taxi routes. Tap glowing Station 22 to travel there.",
+			"why": "Taxis connect almost all stations and move one stop.",
+			"confirm": "Nice! You traveled by taxi to Station 22.",
+			"target": "station_22",
+			"focus": 22,
+			"zoom": 1.3,
+			"action": "station_tap",
+			"expected_station": 22
+		},
+		{
+			"id": "l1_ticket_costs",
+			"title": "Ticket Costs",
+			"body": "Every move costs a ticket: yellow taxi, green bus, pink underground.",
+			"why": "Run out of a ticket type and you cannot use that transport anymore.",
+			"target": "player_drawer",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l1_pair_picker",
+			"title": "Choose Transport",
+			"body": "Station 10 connects by taxi and bus. Tap Station 10, then pick a ticket.",
+			"why": "Choosing wisely saves your rarer tickets for when you need them.",
+			"confirm": "Great choice! You picked your transport ticket to Station 10.",
+			"target": "ticket_picker",
+			"focus": 10,
+			"zoom": 1.3,
+			"action": "ticket_pick",
+			"expected_station": 10
+		},
+		{
+			"id": "l1_ferry_rule",
+			"title": "River Ferry",
+			"body": "The river route from Station 16 to 19 is a ferry. Only Mr. X can ride it.",
+			"why": "Detectives cannot use ferries, giving Mr. X a river escape route.",
+			"target": "ferry",
+			"focus": [16, 19],
+			"zoom": 1.05,
+			"action": "next"
+		},
+		{
+			"id": "l1_blocked_station",
+			"title": "Blocked Stations",
+			"body": "Detectives cannot stand on the same station. Occupied stations are blocked.",
+			"why": "Use your partner's position to wall off Mr. X's exit routes.",
+			"target": "station_18",
+			"focus": [18, 22],
+			"zoom": 1.15,
+			"action": "next"
+		},
+		{
+			"id": "l1_travel_log",
+			"title": "Travel Log",
+			"body": "Mr. X moves in secret. The log records which ticket he used each round.",
+			"why": "A bus ticket means he can only be at connected bus stops.",
+			"target": "travel_log",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l1_reveal_rounds",
+			"title": "Reveal Rounds",
+			"body": "Mr. X surfaces on fixed rounds. Red marker shows his last seen station.",
+			"why": "Rounds 2, 5, and 8 reveal his exact location to all detectives.",
+			"target": "last_seen",
+			"focus": "mrx_last_seen",
+			"zoom": 1.25,
+			"action": "next"
+		},
+		{
+			"id": "l1_deduction",
+			"title": "Track His Trail",
+			"body": "From his last seen station, trace where his ticket could take him.",
+			"why": "Surround his possible escape stations before he slips away again.",
+			"target": "board",
+			"focus": [3, 22, 26],
+			"zoom": 1.05,
+			"action": "next"
+		},
+		{
+			"id": "l1_spotlight_tells",
+			"title": "Spotlight Tells",
+			"body": "The spotlight shows where Mr. X looked on the map during his turn.",
+			"why": "Read his gaze to anticipate his direction, but watch out for bluffs.",
+			"target": "spotlight",
+			"focus": "spotlight",
+			"zoom": 1.1,
+			"action": "next"
+		},
+		{
+			"id": "l1_stuck_detective",
+			"title": "Stuck Detectives",
+			"body": "If a detective has no legal moves or runs out of tickets, they skip.",
+			"why": "Always preserve enough tickets to stay mobile throughout the match.",
+			"target": "hud",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l1_ways_to_lose",
+			"title": "Ways to Lose",
+			"body": "Detectives lose if Mr. X survives round 8, or if all detectives get stuck.",
+			"why": "Keep the pressure on and corner him before rounds run out.",
+			"target": "hud",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l1_catch_mrx",
+			"title": "Catch Mr. X!",
+			"body": "Now close in and land on Mr. X's station to catch him!",
+			"why": "Trap him against the river and blocked stations to win.",
+			"target": "board",
+			"focus": 26,
+			"zoom": 1.25,
+			"action": "catch_mrx"
+		}
+	],
+	"lesson_2": [
+		{
+			"id": "l2_secret_movement",
+			"title": "Moving in Secret",
+			"body": "Now you are Mr. X! Detectives see your ticket choices, never your position.",
+			"why": "Keep them guessing by alternating between taxi, bus, and underground.",
+			"target": "player_token",
+			"focus": 47,
+			"zoom": 1.25,
+			"action": "next"
+		},
+		{
+			"id": "l2_black_ticket",
+			"title": "Black Tickets",
+			"body": "Black tickets hide which transport you used and allow you to ride the ferry.",
+			"why": "Use black tickets on the ferry or right after a reveal to vanish.",
+			"target": "black_ticket",
+			"focus": [16, 19],
+			"zoom": 1.05,
+			"action": "next"
+		},
+		{
+			"id": "l2_double_move",
+			"title": "Double Move",
+			"body": "Double move lets you travel twice in one turn. You have limited cards.",
+			"why": "Use it to break out of a trap or put huge distance between you.",
+			"target": "double_button",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l2_surrendered_tickets",
+			"title": "Surrendered Tickets",
+			"body": "Every ticket detectives spend is surrendered directly into your hand!",
+			"why": "As detectives run low on tickets, your own stash continues growing.",
+			"target": "player_drawer",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l2_reveal_escape",
+			"title": "Surfacing at Round 2",
+			"body": "On round 2 you must surface. Move far away immediately on your next turn.",
+			"why": "Detectives will rush toward your red marker as soon as it appears.",
+			"target": "board",
+			"focus": "mrx_last_seen",
+			"zoom": 1.25,
+			"action": "next"
+		},
+		{
+			"id": "l2_close_eyes",
+			"title": "Close Your Eyes",
+			"body": "With spotlight tells on, use Close Eyes to hide your gaze for a turn.",
+			"why": "Your camera is your eyes. Closing them leaves detectives with zero clues.",
+			"target": "hud",
+			"focus": "hud",
+			"action": "next"
+		},
+		{
+			"id": "l2_camera_gaze",
+			"title": "Camera Tells",
+			"body": "Where you pan your camera is where detectives see your spotlight gaze.",
+			"why": "Look across the city at a false station to lure detectives away from you.",
+			"target": "board",
+			"focus": 1,
+			"zoom": 1.0,
+			"action": "next"
+		},
+		{
+			"id": "l2_win_conditions",
+			"title": "Winning as Mr. X",
+			"body": "Survive all 6 rounds or strand all detectives to win the game!",
+			"why": "Outsmart the detectives and escape into the London night.",
+			"target": "board",
+			"focus": "hud",
+			"action": "survive"
+		}
+	]
+}

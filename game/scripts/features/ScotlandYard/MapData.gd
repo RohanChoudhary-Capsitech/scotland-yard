@@ -14,7 +14,11 @@ func _init(path: String = "res://game/assets/data/map.json") -> void:
 	if not path.is_empty():
 		load_from_file(path)
 
-func load_from_file(path: String = "res://game/assets/data/map.json") -> bool:
+func load_from_file(
+	path: String = "res://game/assets/data/map.json",
+	station_subset: Array = [],
+	custom_start_stations: Array = []
+) -> bool:
 	if not FileAccess.file_exists(path):
 		push_error("MapData: file does not exist: %s" % path)
 		return false
@@ -40,11 +44,18 @@ func load_from_file(path: String = "res://game/assets/data/map.json") -> bool:
 	adjacency.clear()
 	start_stations.clear()
 
+	var subset_lookup: Dictionary = {}
+	if not station_subset.is_empty():
+		for sid_val in station_subset:
+			subset_lookup[int(sid_val)] = true
+
 	# 1. Parse stations
 	var raw_stations: Array = data.get("stations", [])
 	for s in raw_stations:
 		if s is Dictionary:
 			var sid: int = int(s.get("id", 0))
+			if not subset_lookup.is_empty() and not subset_lookup.has(sid):
+				continue
 			var x: float = float(s.get("x", 0.0))
 			var y: float = float(s.get("y", 0.0))
 			stations[sid] = Vector2(x, y)
@@ -57,6 +68,9 @@ func load_from_file(path: String = "res://game/assets/data/map.json") -> bool:
 		if link is Dictionary:
 			var a: int = int(link.get("a", 0))
 			var b: int = int(link.get("b", 0))
+			if not subset_lookup.is_empty() and (not subset_lookup.has(a) or not subset_lookup.has(b)):
+				continue
+
 			var type_str: String = str(link.get("type", "taxi"))
 
 			if not adjacency.has(a):
@@ -69,8 +83,19 @@ func load_from_file(path: String = "res://game/assets/data/map.json") -> bool:
 
 	# 3. Parse start stations
 	var raw_starts: Array = data.get("start_stations", [])
-	for sid in raw_starts:
-		start_stations.append(int(sid))
+	if not custom_start_stations.is_empty():
+		for sid in custom_start_stations:
+			start_stations.append(int(sid))
+	elif not subset_lookup.is_empty():
+		for sid in raw_starts:
+			if subset_lookup.has(int(sid)):
+				start_stations.append(int(sid))
+		if start_stations.is_empty():
+			for sid in stations.keys():
+				start_stations.append(int(sid))
+	else:
+		for sid in raw_starts:
+			start_stations.append(int(sid))
 
 	# 4. Precompute all-pairs shortest path distances (unrestricted by transport type)
 	_compute_all_pairs_distances()
@@ -79,6 +104,54 @@ func load_from_file(path: String = "res://game/assets/data/map.json") -> bool:
 	_cache_central_underground_stations()
 
 	return true
+
+## Loads a level definition by ID from levels.json, filtering the graph to the level's region.
+func load_level(
+	level_id: String,
+	levels_path: String = "res://game/assets/data/levels.json",
+	map_path: String = "res://game/assets/data/map.json"
+) -> bool:
+	if level_id.is_empty() or level_id == "city":
+		return load_from_file(map_path)
+
+	if not FileAccess.file_exists(levels_path):
+		push_error("MapData: levels file does not exist: %s" % levels_path)
+		return load_from_file(map_path)
+
+	var file := FileAccess.open(levels_path, FileAccess.READ)
+	if file == null:
+		return load_from_file(map_path)
+
+	var json := JSON.new()
+	if json.parse(file.get_as_text()) != OK:
+		return load_from_file(map_path)
+
+	var data: Dictionary = json.data as Dictionary
+	if not data.has(level_id):
+		push_warning("MapData: level '%s' not found in %s, falling back to full map" % [level_id, levels_path])
+		return load_from_file(map_path)
+
+	var lvl: Dictionary = data[level_id] as Dictionary
+	var sub_stations: Array = lvl.get("stations", [])
+	var starts: Array = lvl.get("start_stations", [])
+	return load_from_file(map_path, sub_stations, starts)
+
+## Returns the bounding box of all currently loaded stations, with optional margin.
+func get_bounding_box(margin: float = 0.0) -> Rect2:
+	if stations.is_empty():
+		return Rect2(-100.0, -100.0, 2600.0, 2000.0)
+	var min_p := Vector2(999999.0, 999999.0)
+	var max_p := Vector2(-999999.0, -999999.0)
+	for sid in stations.keys():
+		var p: Vector2 = stations[sid]
+		min_p.x = minf(min_p.x, p.x)
+		min_p.y = minf(min_p.y, p.y)
+		max_p.x = maxf(max_p.x, p.x)
+		max_p.y = maxf(max_p.y, p.y)
+	return Rect2(
+		min_p - Vector2(margin, margin),
+		(max_p - min_p) + Vector2(margin * 2.0, margin * 2.0)
+	)
 
 func get_station_position(station_id: int) -> Vector2:
 	return stations.get(station_id, Vector2.ZERO)
@@ -108,10 +181,18 @@ func _cache_central_underground_stations() -> void:
 				ug_stations[sid] = true
 				break
 
-	var map_center := Vector2(1200.0, 900.0)
+	if ug_stations.is_empty():
+		return
+
+	var bbox := get_bounding_box()
+	var map_center := bbox.get_center()
+	var max_dist: float = maxf(bbox.size.x, bbox.size.y) * 0.45
 	for sid in ug_stations.keys():
 		var pos: Vector2 = stations.get(sid, Vector2.ZERO)
-		if pos.distance_to(map_center) < 650.0:
+		if pos.distance_to(map_center) <= max_dist:
+			_central_ug_stations.append(sid)
+	if _central_ug_stations.is_empty():
+		for sid in ug_stations.keys():
 			_central_ug_stations.append(sid)
 	_central_ug_stations.sort()
 

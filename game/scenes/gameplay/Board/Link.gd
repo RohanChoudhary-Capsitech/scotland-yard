@@ -21,6 +21,17 @@ const FERRY_DASH_PATH := "res://game/assets/sprites/single/shared/ferry_dash.png
 	set = set_type
 
 var _route_on: bool = false
+var is_active_link: bool = true
+
+func set_active_link(active: bool) -> void:
+	is_active_link = active
+	if not active:
+		_route_on = false
+		visible = false
+		if _casing != null:
+			_casing.visible = false
+	else:
+		_apply_style()
 
 @onready var _casing: Line2D = get_node_or_null("InnerRoad")
 @onready var _centre_line: Line2D = get_node_or_null("CentreLine")
@@ -51,6 +62,8 @@ func _sync_children() -> void:
 
 ## Shows or hides this link as part of the current player's route preview.
 func set_route_highlight(on: bool, color: Color = Color.TRANSPARENT) -> void:
+	if not is_active_link and on:
+		return
 	_route_on = on
 	_apply_style()
 	if on:

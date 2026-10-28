@@ -2,16 +2,7 @@ extends SceneTree
 
 ## BoardPlayabilityTest — Verifies that Board.tscn, Match.tscn,
 ## and all gameplay components are properly constructed, connected,
-## and fully playable in both game modes ("detectives" and "mrx").
-## Specifically asserts:
-##  1. Board hierarchy: Background Sprite2D as first child with CityMap.png,
-##     Vehicles node with 4 vehicle sprites + wake particles, proper Z-order.
-##  2. board.play_move() coroutine executes and resolves cleanly for taxi, bus,
-##     underground, ferry, and black tickets.
-##  3. Hidden-movement rule: in "Play as Detectives" mode, Mr. X moves do NOT
-##     show any vehicle sprite, do NOT emit wake particles, and keep Mr. X's
-##     token invisible on non-reveal rounds. In "Play as Mr. X" mode, human Mr. X
-##     sees vehicle transit and visible token.
+## styled with the illustrated city art, and fully playable in both modes.
 
 var passed_tests: int = 0
 var failed_tests: int = 0
@@ -25,8 +16,9 @@ func _run_all_tests() -> void:
 	print("==================================================")
 
 	test_board_hierarchy()
+	test_road_styling()
 	test_board_methods()
-	test_board_camera()
+	test_camera_and_readability_lod()
 	await test_board_play_move()
 	await test_playability_detectives_mode()
 	await test_playability_mrx_mode()
@@ -55,36 +47,41 @@ func _assert_true(cond: bool, msg: String) -> void:
 		_fail(msg)
 
 func test_board_hierarchy() -> void:
-	print("\n--- 1. Testing Board.tscn Hierarchy ---")
+	print("\n--- 1. Testing Board.tscn Hierarchy & Draw Order ---")
 	var board_scene: PackedScene = load("res://game/scenes/gameplay/Board/Board.tscn")
 	_assert_true(board_scene != null, "Board.tscn loaded successfully")
 
 	var board := board_scene.instantiate() as Board
 	_assert_true(board != null, "Board instantiated successfully")
 
-	# Check Background is first child
+	# 1. Background (Layer 0, first child)
 	_assert_true(board.get_child_count() > 0, "Board has children")
 	var first_child := board.get_child(0)
-	_assert_true(first_child.name == "Background", "First child is Background")
-	if first_child is Sprite2D:
-		var bg := first_child as Sprite2D
-		_assert_true(bg.texture != null, "Background Sprite2D has texture assigned")
-		_assert_true(bg.position == Vector2(1200, 900), "Background position centered at (1200, 900)")
-	elif first_child is Node2D:
-		_assert_true(first_child.get_child_count() > 0, "Background Node2D has tile children")
+	_assert_true(first_child is Node2D and first_child.name == "Background", "First child is the Background tiles node")
+	var bg := first_child as Node2D
+	_assert_true(bg.z_index == 0, "Background z_index == 0")
+	_assert_true(bg.get_child_count() == BoardBuilder.CITY_TILES.x * BoardBuilder.CITY_TILES.y, "Background has one Sprite2D per baked city tile")
+	var covered := Rect2()
+	for tile in bg.get_children():
+		var spr := tile as Sprite2D
+		_assert_true(spr != null and spr.texture != null, "City tile %s has a texture" % tile.name)
+		var r := Rect2(spr.position, spr.texture.get_size() * spr.scale)
+		covered = r if covered.size == Vector2.ZERO else covered.merge(r)
+	_assert_true(covered.position.is_equal_approx(BoardBuilder.CITY_AREA.position) and covered.size.is_equal_approx(BoardBuilder.CITY_AREA.size),
+		"City tiles exactly cover CITY_AREA (got %s)" % str(covered))
 
-	# Check Links
+	# 2. Links Node + Groups
 	var links_node: Node2D = board.get_node_or_null("Links")
 	_assert_true(links_node != null, "Board has $Links node")
 
-	var ug_group: Node2D = links_node.get_node_or_null("Underground")
 	var bus_group: Node2D = links_node.get_node_or_null("Bus")
 	var taxi_group: Node2D = links_node.get_node_or_null("Taxi")
+	var ug_group: Node2D = links_node.get_node_or_null("Underground")
 	var ferry_group: Node2D = links_node.get_node_or_null("Ferry")
 
-	_assert_true(ug_group != null, "Links has Underground group")
 	_assert_true(bus_group != null, "Links has Bus group")
 	_assert_true(taxi_group != null, "Links has Taxi group")
+	_assert_true(ug_group != null, "Links has Underground group")
 	_assert_true(ferry_group != null, "Links has Ferry group")
 
 	var total_links: int = (
@@ -93,9 +90,25 @@ func test_board_hierarchy() -> void:
 		+ taxi_group.get_child_count()
 		+ ferry_group.get_child_count()
 	)
-	_assert_true(total_links == 468 or total_links == 449, "Total links across groups == 468 (got %d)" % total_links)
+	_assert_true(total_links == 468, "Total links across groups == 468 (got %d)" % total_links)
 
-	# Check Vehicles instance
+	# 3. Buildings and trees are baked into the background (no runtime props)
+	_assert_true(board.get_node_or_null("Props") == null, "No Props node: city is baked into the background tiles")
+
+	# 4. Stations (Layer 50)
+	var stations_node: Node2D = board.get_node_or_null("Stations")
+	_assert_true(stations_node != null, "Board has $Stations node")
+	_assert_true(stations_node.get_child_count() == 199, "Board has exactly 199 Station instances (got %d)" % stations_node.get_child_count())
+
+	var sample_st: Station = stations_node.get_node_or_null("Station_1") as Station
+	_assert_true(sample_st != null, "Station_1 exists")
+	_assert_true(sample_st.get_node_or_null("Base") != null, "Station has Base pin sprite")
+	_assert_true(sample_st.get_node_or_null("Number") != null, "Station has Number label")
+	_assert_true(sample_st.get_node_or_null("Highlight") != null, "Station has Highlight sprite")
+	_assert_true(sample_st.get_node_or_null("MetroEntrance") != null, "Station has MetroEntrance sprite")
+	_assert_true(sample_st.get_node_or_null("Dock") != null, "Station has Dock sprite")
+
+	# 5. Vehicles (Layer 60)
 	var vehicles: BoardVehicles = board.get_node_or_null("Vehicles") as BoardVehicles
 	_assert_true(vehicles != null, "Board has $Vehicles instance")
 	vehicles._ensure_nodes()
@@ -104,36 +117,81 @@ func test_board_hierarchy() -> void:
 	_assert_true(vehicles.train != null, "Vehicles has Train Sprite2D")
 	_assert_true(vehicles.ferry != null, "Vehicles has Ferry Sprite2D")
 	_assert_true(vehicles.wake != null, "Vehicles has Wake GPUParticles2D")
-	_assert_true(not vehicles.taxi.visible, "Taxi initially hidden")
-	_assert_true(not vehicles.bus.visible, "Bus initially hidden")
-	_assert_true(not vehicles.train.visible, "Train initially hidden")
-	_assert_true(not vehicles.ferry.visible, "Ferry initially hidden")
-	_assert_true(not vehicles.wake.emitting, "Wake initially not emitting")
 
-	# Check layer ordering: Vehicles is above Links, below Tokens
-	var links_idx: int = links_node.get_index()
-	var vehicles_idx: int = vehicles.get_index()
+	# 6. Tokens (Layer 70)
 	var tokens_node: Node2D = board.get_node_or_null("Tokens")
 	_assert_true(tokens_node != null, "Board has $Tokens node")
-	var tokens_idx: int = tokens_node.get_index()
-	_assert_true(vehicles_idx > links_idx, "Vehicles rendered above Links (index %d > %d)" % [vehicles_idx, links_idx])
-	_assert_true(vehicles_idx < tokens_idx, "Vehicles rendered below Tokens (index %d < %d)" % [vehicles_idx, tokens_idx])
-
-	# Check Stations
-	var stations_node: Node2D = board.get_node_or_null("Stations")
-	_assert_true(stations_node != null, "Board has $Stations node")
-	_assert_true(stations_node.get_child_count() == 199, "Board has exactly 199 Station instances (got %d)" % stations_node.get_child_count())
-
-	# Check Tokens
 	_assert_true(tokens_node.get_child_count() == 6, "Board has 6 Token instances")
 
+	# 7. LastSeen (Layer 80)
 	var last_seen: LastSeenMarker = board.get_node_or_null("LastSeen") as LastSeenMarker
 	_assert_true(last_seen != null, "Board has $LastSeen marker")
+
+	# 8. Darkness (CanvasModulate) and Spotlight (Layer 90)
+	var darkness: CanvasModulate = board.get_node_or_null("Darkness") as CanvasModulate
+	_assert_true(darkness != null, "Board has $Darkness CanvasModulate")
+	_assert_true(not darkness.visible, "Darkness CanvasModulate hidden by default")
+
+	var spotlight_node: Node2D = board.get_node_or_null("Spotlight") as Node2D
+	_assert_true(spotlight_node != null, "Board has $Spotlight Node2D")
+	_assert_true(spotlight_node.z_index == 90, "Spotlight layer is 90 (on top of tokens)")
+	var point_light: PointLight2D = spotlight_node.get_node_or_null("Light") as PointLight2D
+	_assert_true(point_light != null, "Spotlight has PointLight2D child")
+	_assert_true(point_light.texture != null, "PointLight2D has radial gradient texture assigned")
+
+	# Verify Draw Order: Background(0) < Bus(10) < Taxi(20) < Metro/Ferry(40) < Stations(50) < Vehicles(60) < Tokens(70) < LastSeen(80) < Spotlight(90)
+	_assert_true(bg.z_index < bus_group.z_index, "Background layer < Bus layer")
+	_assert_true(bus_group.z_index < taxi_group.z_index, "Bus layer < Taxi layer (%d < %d)" % [bus_group.z_index, taxi_group.z_index])
+	_assert_true(taxi_group.z_index < ug_group.z_index, "Taxi layer < Metro layer (%d < %d)" % [taxi_group.z_index, ug_group.z_index])
+	_assert_true(ug_group.z_index < stations_node.z_index, "Metro layer < Stations layer (%d < %d)" % [ug_group.z_index, stations_node.z_index])
+	_assert_true(stations_node.z_index < vehicles.z_index, "Stations layer < Vehicles layer (%d < %d)" % [stations_node.z_index, vehicles.z_index])
+	_assert_true(vehicles.z_index < tokens_node.z_index, "Vehicles layer < Tokens layer (%d < %d)" % [vehicles.z_index, tokens_node.z_index])
+	_assert_true(tokens_node.z_index < last_seen.z_index, "Tokens layer < LastSeen layer (%d < %d)" % [tokens_node.z_index, last_seen.z_index])
+	_assert_true(last_seen.z_index < spotlight_node.z_index, "LastSeen layer < Spotlight layer (%d < %d)" % [last_seen.z_index, spotlight_node.z_index])
+
+	board.free()
+
+func test_road_styling() -> void:
+	print("\n--- 2. Testing Road & Link Styling ---")
+	var board_scene: PackedScene = load("res://game/scenes/gameplay/Board/Board.tscn")
+	var board := board_scene.instantiate() as Board
+
+	var links_root := board.get_node("Links")
+
+	# 1. Taxi / bus streets are baked into the city; their links only show as route previews
+	var taxi_link := links_root.get_node("Taxi").get_child(0) as Link
+	_assert_true(taxi_link != null, "Found taxi link")
+	_assert_true(not taxi_link.visible, "Taxi link overlay hidden by default (street is in the background)")
+	taxi_link.set_route_highlight(true)
+	_assert_true(taxi_link.visible and taxi_link.default_color == Link.COLOR_TAXI, "Taxi route preview shows in taxi yellow")
+	_assert_true(taxi_link.width == 7.0, "Route preview width == 7")
+	taxi_link.set_route_highlight(false)
+	_assert_true(not taxi_link.visible, "Taxi route preview hides again")
+
+	var bus_link := links_root.get_node("Bus").get_child(0) as Link
+	_assert_true(bus_link != null and not bus_link.visible, "Bus link overlay hidden by default")
+	bus_link.set_route_highlight(true)
+	_assert_true(bus_link.visible and bus_link.default_color == Link.COLOR_BUS, "Bus route preview shows in bus green")
+	bus_link.set_route_highlight(false)
+
+	# 2. Underground link: always-visible pink dashed metro line with a white casing
+	var ug_link := links_root.get_node("Underground").get_child(0) as Link
+	_assert_true(ug_link != null and ug_link.visible, "Underground metro line visible")
+	_assert_true(ug_link.width == 5.0, "Underground metro line width == 5.0")
+	_assert_true(ug_link.texture != null, "Underground metro line is dashed")
+	var casing := ug_link.get_node_or_null("InnerRoad") as Line2D
+	_assert_true(casing != null and casing.visible and casing.show_behind_parent, "Metro line has a casing drawn behind it")
+
+	# 3. Ferry link: white dotted curve that bows into the river
+	var ferry_link := links_root.get_node("Ferry").get_child(0) as Link
+	_assert_true(ferry_link != null and ferry_link.visible, "Ferry route visible")
+	_assert_true(ferry_link.width == 4.0, "Ferry route line width == 4.0")
+	_assert_true(ferry_link.points.size() > 2, "Ferry route is a curve (got %d points)" % ferry_link.points.size())
 
 	board.free()
 
 func test_board_methods() -> void:
-	print("\n--- 2. Testing Board.gd Methods ---")
+	print("\n--- 3. Testing Board.gd Methods ---")
 	var board_scene: PackedScene = load("res://game/scenes/gameplay/Board/Board.tscn")
 	var board := board_scene.instantiate() as Board
 
@@ -167,20 +225,48 @@ func test_board_methods() -> void:
 	board.set_last_seen(15, false)
 	_assert_true(not board.get_node("LastSeen").visible, "LastSeen marker hidden")
 
+	# Test spotlight controls
+	_assert_true(not board.is_spotlight_visible(), "Spotlight initially not visible")
+	board.show_spotlight()
+	_assert_true(board.is_spotlight_visible(), "Spotlight shown via show_spotlight()")
+	board.set_spotlight_target(Vector2(600, 600))
+	_assert_true(board._spotlight_target == Vector2(600, 600), "Spotlight target set to (600, 600)")
+	board.hide_spotlight(true)
+	_assert_true(not board.is_spotlight_visible(), "Spotlight hidden via hide_spotlight()")
+
 	board.free()
 
-func test_board_camera() -> void:
-	print("\n--- 3. Testing BoardCameraController ---")
+func test_camera_and_readability_lod() -> void:
+	print("\n--- 4. Testing BoardCameraController & Readability LOD ---")
+	var board_scene: PackedScene = load("res://game/scenes/gameplay/Board/Board.tscn")
+	var board := board_scene.instantiate() as Board
+
+	# 1. Zoomed out (< 0.7): station pins scale up for readability
+	board.set_zoom_lod(0.5)
+	var sample_station: Station = board.get_station(1)
+	_assert_true(sample_station.scale == Vector2(1.35, 1.35), "Zoomed out: Station pins scaled up to 1.35x for readability")
+
+	# 2. Zoomed in (>= 0.7): normal pins
+	board.set_zoom_lod(1.0)
+	_assert_true(sample_station.scale == Vector2.ONE, "Zoomed in: Station pins normal 1.0x scale")
+
+	# Route preview from station 1 lights its links and clears with the highlights
+	board.show_routes(1, [{"to": 8, "ticket": "bus"}])
+	_assert_true(board.get_route_link_count() >= 1, "show_routes() lights the 1-8 bus link")
+	board.clear_all_highlights()
+	_assert_true(board.get_route_link_count() == 0, "clear_all_highlights() clears route previews")
+
+	# 3. Test Camera Controller bounds
 	var cam := BoardCameraController.new()
 	cam._ready()
-
-	_assert_true(cam.zoom == Vector2(0.65, 0.65), "Initial zoom centered")
-	_assert_true(cam.position.x >= cam.map_bounds.position.x and cam.position.x <= cam.map_bounds.end.x, "Initial position inside bounds")
+	_assert_true(cam.zoom == Vector2(0.65, 0.65), "Initial camera zoom is 0.65")
+	_assert_true(cam.position.x >= cam.map_bounds.position.x and cam.position.x <= cam.map_bounds.end.x, "Camera inside bounds")
 
 	cam.free()
+	board.free()
 
 func test_board_play_move() -> void:
-	print("\n--- 4. Testing Board.play_move() Vehicle Animations ---")
+	print("\n--- 5. Testing Board.play_move() Vehicle Animations ---")
 	var board_scene: PackedScene = load("res://game/scenes/gameplay/Board/Board.tscn")
 	var board := board_scene.instantiate() as Board
 	root.add_child(board)
@@ -246,7 +332,7 @@ class MockSaveManager extends RefCounted:
 		pass
 
 func test_playability_detectives_mode() -> void:
-	print("\n--- 5. Testing Gameplay in 'Play as Detectives' Mode ---")
+	print("\n--- 6. Testing Gameplay in 'Play as Detectives' Mode ---")
 	var match_scene: PackedScene = load("res://game/scenes/gameplay/Match.tscn")
 	_assert_true(match_scene != null, "Match.tscn loaded successfully")
 
@@ -314,7 +400,7 @@ func test_playability_detectives_mode() -> void:
 
 	match_inst._on_station_clicked(chosen_st)
 	if match_inst.hud != null and match_inst.hud.ticket_picker != null and match_inst.hud.ticket_picker.visible:
-		match_inst._on_ticket_picker_chosen(chosen_ticket, false)
+		match_inst.hud.ticket_picker._on_ticket_pressed(chosen_ticket)
 	while match_inst._is_animating_move:
 		await process_frame
 
@@ -329,7 +415,7 @@ func test_playability_detectives_mode() -> void:
 	bus.free()
 
 func test_playability_mrx_mode() -> void:
-	print("\n--- 6. Testing Gameplay in 'Play as Mr. X' Mode ---")
+	print("\n--- 7. Testing Gameplay in 'Play as Mr. X' Mode ---")
 	var match_scene: PackedScene = load("res://game/scenes/gameplay/Match.tscn")
 	var match_inst := match_scene.instantiate() as Match
 	root.add_child(match_inst)
@@ -359,13 +445,15 @@ func test_playability_mrx_mode() -> void:
 
 	match_inst._on_station_clicked(target_st)
 	if match_inst.hud != null and match_inst.hud.ticket_picker != null and match_inst.hud.ticket_picker.visible:
-		match_inst._on_ticket_picker_chosen(ticket_mrx, false)
+		match_inst.hud.ticket_picker._on_ticket_pressed(ticket_mrx)
 	while match_inst._is_animating_move:
 		await process_frame
 
 	_assert_true(match_feat.state.positions[0] == target_st, "Mr. X moved to clicked station %d" % target_st)
 	_assert_true(match_inst.board.get_token(0).position == match_inst.board.get_station_position(target_st), "Mr. X token moved to station %d" % target_st)
-	_assert_true(not match_inst.board.get_token(0).visible, "Visibility rule: Mr. X token hidden once turn passes to Detective 1")
+	# Visibility rule: Mr. X's token is shown ONLY while a Human Mr. X is taking his turn.
+	# Once turn passes to Detective, Mr. X's token is hidden.
+	_assert_true(not match_inst.board.get_token(0).visible, "Visibility rule: Mr. X token is hidden once Detective turn begins")
 	_assert_true(not match_inst.board.get_vehicles().get_vehicle(ticket_mrx).visible, "Vehicle hidden after Mr. X move finishes")
 
 	# Now it's Detective 1 (AI)

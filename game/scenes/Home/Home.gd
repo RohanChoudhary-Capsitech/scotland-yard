@@ -18,9 +18,15 @@ extends UIController
 @onready var _lbl_warning: Label = %LblWarning
 @onready var _safe_area_margin: MarginContainer = %SafeAreaMargin
 @onready var _btn_how_to_play: Button = %BtnHowToPlay
+@onready var _btn_replay_tutorial: Button = get_node_or_null("%BtnReplayTutorial") as Button
 @onready var _background: TextureRect = %Background
 @onready var _hero: VBoxContainer = %Hero
 @onready var _setup_card: PanelContainer = %SetupCard
+@onready var _btn_lvl_tutorial: Button = %BtnLevelTutorial
+@onready var _btn_lvl_neighbourhood: Button = %BtnLevelNeighbourhood
+@onready var _btn_lvl_district: Button = %BtnLevelDistrict
+@onready var _btn_lvl_city: Button = %BtnLevelCity
+@onready var _count_hbox: HBoxContainer = %CountHBox
 
 const ICON_HUMAN := preload("res://game/assets/sprites/single/ui/icons/human.svg")
 const ICON_AI := preload("res://game/assets/sprites/single/ui/icons/robot.svg")
@@ -36,6 +42,8 @@ var _save: Object
 var _selected_detective_count: int = 4
 var _tells_enabled: bool = false
 var _seats: Array[Dictionary] = [] # [{ "id": int, "name": String, "type": "human"|"ai", "is_human": bool }]
+var _selected_level: String = "city"
+var _unlocked_levels: Array[String] = ["tutorial", "neighbourhood", "district", "city"]
 
 var _selected_mode: String:
 	get:
@@ -67,6 +75,12 @@ func _on_ready() -> void:
 
 	# Load saved settings if available
 	if _save != null:
+		if _save.has_method("get_unlocked_levels"):
+			_unlocked_levels = _save.get_unlocked_levels()
+		if _save.has_method("get_selected_level"):
+			_selected_level = _save.get_selected_level()
+		else:
+			_selected_level = str(_save.get_value("selected_level", "city"))
 		_selected_detective_count = int(_save.get_value("detective_count", 4))
 		_tells_enabled = bool(_save.get_value("tells_enabled", false))
 		var saved_seats = _save.get_value("seats", [])
@@ -76,9 +90,22 @@ func _on_ready() -> void:
 			var saved_mode: String = str(_save.get_value("match_mode", "detectives"))
 			_apply_preset(saved_mode)
 
+	# If level specifies a fixed detective count, sync it
+	_sync_level_detectives()
+
 	_apply_safe_area()
 	if get_viewport() != null:
 		get_viewport().size_changed.connect(_apply_safe_area)
+
+	# Connect Level Buttons
+	if _btn_lvl_tutorial != null:
+		_btn_lvl_tutorial.pressed.connect(func(): _select_level("tutorial"))
+	if _btn_lvl_neighbourhood != null:
+		_btn_lvl_neighbourhood.pressed.connect(func(): _select_level("neighbourhood"))
+	if _btn_lvl_district != null:
+		_btn_lvl_district.pressed.connect(func(): _select_level("district"))
+	if _btn_lvl_city != null:
+		_btn_lvl_city.pressed.connect(func(): _select_level("city"))
 
 	# Connect Presets
 	if _btn_detectives != null:
@@ -108,6 +135,8 @@ func _on_ready() -> void:
 		_btn_start.pressed.connect(_on_start_pressed)
 	if _btn_how_to_play != null:
 		_btn_how_to_play.pressed.connect(_on_how_to_play_pressed)
+	if _btn_replay_tutorial != null:
+		_btn_replay_tutorial.pressed.connect(_on_replay_tutorial_pressed)
 
 	# Connect Seat Toggles and Name edits
 	for i in range(_seat_type_buttons.size()):
@@ -240,11 +269,71 @@ func _apply_safe_area() -> void:
 		_safe_area_margin.add_theme_constant_override("margin_bottom", int(maxf(0.0, float(window_size.y - safe_area.end.y) * scale_y)))
 
 func _refresh_all_ui() -> void:
+	_update_level_buttons()
 	_update_detective_buttons()
 	_update_seat_cards()
 	_update_preset_buttons()
 	_update_tells_button()
 	_validate_seats()
+
+func _select_level(level_id: String) -> void:
+	if not _unlocked_levels.has(level_id):
+		return
+	_selected_level = level_id
+	_sync_level_detectives()
+	_refresh_all_ui()
+
+func _sync_level_detectives() -> void:
+	match _selected_level:
+		"tutorial":
+			_selected_detective_count = 2
+		"neighbourhood":
+			_selected_detective_count = 3
+		"district":
+			_selected_detective_count = 4
+		"city":
+			if _save != null:
+				_selected_detective_count = clampi(int(_save.get_value("detective_count", 4)), 3, 5)
+			else:
+				_selected_detective_count = 4
+
+func _update_level_buttons() -> void:
+	if _count_hbox == null:
+		_count_hbox = get_node_or_null("%CountHBox") as HBoxContainer
+	if _btn_lvl_tutorial == null:
+		_btn_lvl_tutorial = get_node_or_null("%BtnLevelTutorial") as Button
+	if _btn_lvl_neighbourhood == null:
+		_btn_lvl_neighbourhood = get_node_or_null("%BtnLevelNeighbourhood") as Button
+	if _btn_lvl_district == null:
+		_btn_lvl_district = get_node_or_null("%BtnLevelDistrict") as Button
+	if _btn_lvl_city == null:
+		_btn_lvl_city = get_node_or_null("%BtnLevelCity") as Button
+
+	var lvl_buttons: Dictionary = {
+		"tutorial": _btn_lvl_tutorial,
+		"neighbourhood": _btn_lvl_neighbourhood,
+		"district": _btn_lvl_district,
+		"city": _btn_lvl_city,
+	}
+	var lvl_names: Dictionary = {
+		"tutorial": "Tutorial",
+		"neighbourhood": "Neighbourhood",
+		"district": "District",
+		"city": "City",
+	}
+
+	for lvl_key in lvl_buttons.keys():
+		var btn: Button = lvl_buttons[lvl_key]
+		if btn == null:
+			continue
+		var is_unlocked: bool = _unlocked_levels.has(lvl_key)
+		btn.disabled = not is_unlocked
+		var base_name: String = str(lvl_names[lvl_key])
+		btn.text = base_name if is_unlocked else "🔒 " + base_name
+		btn.set_pressed_no_signal(_selected_level == lvl_key)
+
+	if _count_hbox != null:
+		_count_hbox.visible = (_selected_level == "city")
 
 func _update_detective_buttons() -> void:
 	if _btn_det_3 != null:
@@ -358,6 +447,27 @@ func _on_start_pressed() -> void:
 		_save.set_value("detective_count", _selected_detective_count)
 		_save.set_value("tells_enabled", _tells_enabled)
 		_save.set_value("match_mode", _get_preset_name_or_mixed())
+		if _save.has_method("set_selected_level"):
+			_save.set_selected_level(_selected_level)
+		else:
+			_save.set_value("selected_level", _selected_level)
+		_save.save_game()
+
+	if _scene != null:
+		_scene.go_to("res://game/scenes/gameplay/Match.tscn")
+	else:
+		get_tree().change_scene_to_file("res://game/scenes/gameplay/Match.tscn")
+
+func _on_replay_tutorial_pressed() -> void:
+	if _save != null:
+		_save.set_tutorial_lesson(1)
+		_save.set_selected_level("tutorial")
+		_save.set_value("detective_count", 2)
+		_save.set_value("seats", [
+			{"id": 0, "name": "Mr. X", "type": "ai", "is_human": false},
+			{"id": 1, "name": "Detective 1", "type": "human", "is_human": true},
+			{"id": 2, "name": "Detective 2", "type": "ai", "is_human": false}
+		])
 		_save.save_game()
 
 	if _scene != null:

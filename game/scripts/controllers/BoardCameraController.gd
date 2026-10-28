@@ -57,13 +57,31 @@ func fit_to_screen() -> void:
 	if vp_rect.size.x <= 0 or vp_rect.size.y <= 0:
 		return
 
-	var fit_x: float = vp_rect.size.x / 2400.0
-	var fit_y: float = vp_rect.size.y / 1800.0
-	# Fit the entire map comfortably on screen
-	var target_zoom: float = clampf(maxf(fit_x, fit_y), min_zoom, max_zoom)
+	var bounds_w: float = maxf(map_bounds.size.x, 500.0)
+	var bounds_h: float = maxf(map_bounds.size.y, 400.0)
+	var fit_x: float = vp_rect.size.x / bounds_w
+	var fit_y: float = vp_rect.size.y / bounds_h
+	# Fit the entire region on screen (or cover for full city)
+	var target_zoom: float = 0.0
+	if map_bounds.size.x >= 2200.0:
+		target_zoom = clampf(maxf(fit_x, fit_y), min_zoom, max_zoom)
+	else:
+		target_zoom = clampf(minf(fit_x, fit_y), min_zoom, max_zoom)
+
 	zoom = Vector2(target_zoom, target_zoom)
 	_clamp_to_bounds()
 	_update_board_lod()
+
+## Sets camera clamping bounds to a specific sub-region (for map levels).
+func set_region_bounds(region_box: Rect2, margin: float = 150.0) -> void:
+	map_bounds = Rect2(
+		region_box.position.x - margin,
+		region_box.position.y - margin,
+		region_box.size.x + margin * 2.0,
+		region_box.size.y + margin * 2.0
+	)
+	position = map_bounds.get_center()
+	fit_to_screen()
 
 func _unhandled_input(event: InputEvent) -> void:
 	# 1. Mouse Drag Panning (Left, Right, or Middle button)
@@ -173,13 +191,20 @@ func _update_board_lod() -> void:
 		board.set_zoom_lod(zoom.x)
 
 ## Smoothly pans to a target world position (used on human turn start & Focus button).
-## With target_zoom > 0 it also zooms in to at least that level (never zooms out).
-func pan_to_position(target_world_pos: Vector2, duration: float = 0.45, target_zoom: float = 0.0) -> void:
+## With target_zoom > 0 it also zooms in to at least that level (or sets exact zoom if force_zoom=true).
+func pan_to_position(target_world_pos: Vector2, duration: float = 0.45, target_zoom: float = 0.0, force_zoom: bool = false) -> void:
 	_pan_velocity = Vector2.ZERO
 	if _focus_tween != null and _focus_tween.is_valid():
 		_focus_tween.kill()
 
-	var end_zoom: float = clampf(maxf(zoom.x, target_zoom), min_zoom, max_zoom)
+	var end_zoom: float
+	if force_zoom and target_zoom > 0.0:
+		end_zoom = clampf(target_zoom, min_zoom, max_zoom)
+	elif target_zoom > 0.0:
+		end_zoom = clampf(maxf(zoom.x, target_zoom), min_zoom, max_zoom)
+	else:
+		end_zoom = zoom.x
+
 	var start_zoom: Vector2 = zoom
 	zoom = Vector2(end_zoom, end_zoom) # clamp the target at the final zoom
 	var clamped_target := _clamped_center(target_world_pos)
@@ -191,6 +216,9 @@ func pan_to_position(target_world_pos: Vector2, duration: float = 0.45, target_z
 	if not is_equal_approx(end_zoom, zoom.x):
 		_focus_tween.parallel().tween_property(self, "zoom", Vector2(end_zoom, end_zoom), duration)
 		_focus_tween.finished.connect(_update_board_lod)
+
+func is_focus_moving() -> bool:
+	return _focus_tween != null and _focus_tween.is_valid() and _focus_tween.is_running()
 
 func _clamp_to_bounds() -> void:
 	_enforce_cover_zoom()

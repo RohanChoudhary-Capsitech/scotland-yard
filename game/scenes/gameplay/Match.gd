@@ -67,6 +67,11 @@ var _previous_player: int = -1
 var _recorded_mrx_path: Array[Dictionary] = []
 var _mrx_closed_eyes_this_round: bool = false
 
+const TutorialControllerClass = preload("res://game/scripts/controllers/TutorialController.gd")
+var _tutorial_controller: Node = null
+var tutorial_controller: Node:
+	get: return _tutorial_controller
+
 func _ready() -> void:
 	# Fallback resolution for standalone/editor play (F6) when SceneManager injection didn't run
 	if not _initialized_gameplay and get_tree() != null and get_tree().root != null:
@@ -121,8 +126,20 @@ func _setup_match() -> void:
 	var detective_count: int = 4
 	var tells_enabled: bool = false
 	var seats: Array = []
+	var selected_level: String = "city"
+	var tutorial_lesson: int = 0
 
 	if _save != null:
+		if _save.has_method("get_selected_level"):
+			selected_level = _save.get_selected_level()
+		else:
+			selected_level = str(_save.get_value("selected_level", "city"))
+		if _save.has_method("get_tutorial_lesson"):
+			tutorial_lesson = _save.get_tutorial_lesson()
+		else:
+			tutorial_lesson = int(_save.get_value("tutorial_lesson", 0))
+		if selected_level == "tutorial" and tutorial_lesson == 0:
+			tutorial_lesson = 1
 		mode = str(_save.get_value("match_mode", "detectives"))
 		detective_count = int(_save.get_value("detective_count", 4))
 		tells_enabled = bool(_save.get_value("tells_enabled", false))
@@ -159,7 +176,9 @@ func _setup_match() -> void:
 			"logger": _logger,
 			"detectives": detective_count,
 			"tells_enabled": tells_enabled,
-			"auto_play_ai": false
+			"auto_play_ai": false,
+			"level": selected_level,
+			"tutorial_lesson": tutorial_lesson
 		}
 		if not seats.is_empty():
 			deps["seats"] = seats
@@ -169,6 +188,17 @@ func _setup_match() -> void:
 		_match_feature.initialize(deps)
 		_match_feature.start()
 
+		# Filter board and camera to active level region
+		if _board != null and _match_feature.map_data != null:
+			var active_stations: Array[int] = []
+			for sid in _match_feature.map_data.stations.keys():
+				active_stations.append(int(sid))
+			_board.apply_level_filter(active_stations)
+
+			if _camera != null and active_stations.size() < 199:
+				var region_box := _match_feature.map_data.get_bounding_box(150.0)
+				_camera.set_region_bounds(region_box, 150.0)
+
 		# Setup initial token positions
 		_setup_initial_tokens()
 
@@ -177,12 +207,24 @@ func _setup_match() -> void:
 			var names_map: Dictionary = {}
 			for s in _match_feature.seats:
 				names_map[int(s.get("id", 0))] = str(s.get("name", ""))
-			_hud.configure_hud(_match_feature.state, _match_feature.mode, detective_count, _bus, names_map)
+			_hud.configure_hud(_match_feature.state, _match_feature.mode, _match_feature.detective_count, _bus, names_map)
 			if _hud.ticket_picker != null:
 				_hud.ticket_picker.ticket_chosen.connect(_on_ticket_picker_chosen)
 				_hud.ticket_picker.picker_cancelled.connect(_on_ticket_picker_cancelled)
 				if _hud.ticket_picker.has_signal("close_eyes_requested"):
 					_hud.ticket_picker.close_eyes_requested.connect(_on_close_eyes_requested)
+
+		# Initialize TutorialController if tutorial active
+		if tutorial_lesson > 0 and _hud != null and _hud.coach_mark != null:
+			_tutorial_controller = TutorialControllerClass.new()
+			_tutorial_controller.name = "TutorialController"
+			add_child(_tutorial_controller)
+			if get_tree() != null and get_tree().root != null:
+				var registry: Node = get_tree().root.get_node_or_null("ServiceRegistry")
+				if registry != null:
+					_tutorial_controller.inject_services(registry)
+			_tutorial_controller.configure(_hud.coach_mark, _match_feature, _board, _camera, _hud, tutorial_lesson)
+			_tutorial_controller.start_tutorial()
 
 		# Initial turn trigger
 		_on_turn_started(_match_feature.state.current_player)
@@ -223,6 +265,9 @@ func _on_station_clicked(station_id: int) -> void:
 	if _match_feature.is_ai_turn():
 		return
 
+	if _tutorial_controller != null and not _tutorial_controller.is_station_tap_allowed(station_id):
+		return
+
 	var cur_p: int = _match_feature.state.current_player
 	var legal_moves: Array[Dictionary] = _match_feature.state.legal_moves(cur_p)
 
@@ -234,6 +279,9 @@ func _on_station_clicked(station_id: int) -> void:
 
 	if matching_moves.is_empty():
 		return
+
+	if _tutorial_controller != null:
+		_tutorial_controller.on_station_tapped(station_id)
 
 	# If human Mr. X, tapping a station pulls gaze briefly
 	if cur_p == 0 and _match_feature.tells_enabled and _match_feature.player_gaze != null and _board != null:
@@ -262,6 +310,9 @@ func _on_station_clicked(station_id: int) -> void:
 func _on_ticket_picker_chosen(ticket: String, use_double_move: bool) -> void:
 	if _match_feature == null or _is_animating_move:
 		return
+
+	if _tutorial_controller != null:
+		_tutorial_controller.on_ticket_picked(ticket)
 
 	var cur_p: int = _match_feature.state.current_player
 	if use_double_move and cur_p == 0:
@@ -425,6 +476,9 @@ func _start_player_turn(player: int) -> void:
 				_recorded_mrx_path.clear()
 			elif _board != null and _board.is_spotlight_visible():
 				_board.hide_spotlight(true)
+
+		if _tutorial_controller != null:
+			_tutorial_controller.on_turn_started(player)
 	else:
 		# AI turn: clear highlights and ensure spotlight hidden if not AI Mr. X
 		if _board != null:
@@ -855,6 +909,9 @@ func _execute_move_and_animate(player: int, to: int, ticket: String) -> void:
 			_hud.update_hud(false)
 
 	# 5. Check Game Over
+	if _tutorial_controller != null:
+		_tutorial_controller.on_move_completed(player)
+
 	if _match_feature.state.game_over:
 		_on_game_over(_match_feature.state.reason)
 		return
@@ -889,6 +946,15 @@ func _on_game_over(reason: String) -> void:
 
 	if _hud != null:
 		_hud.update_hud(true)
+
+	# Unlock progression: completing a level unlocks the next
+	if _save != null:
+		var cur_level: String = str(_save.get_value("selected_level", "city"))
+		var next_unlocked: String = ""
+		if _save.has_method("unlock_next_level"):
+			next_unlocked = _save.unlock_next_level(cur_level)
+		if not next_unlocked.is_empty() and _hud != null and _hud.toast != null:
+			_hud.toast.show_toast("New level unlocked: %s!" % next_unlocked.capitalize())
 
 	_show_game_over_panel(reason, route)
 

@@ -10,6 +10,7 @@ var _last_processed_log_count: int = 0
 var gaze_weights: Dictionary = {}       # station_id (int) -> weight (float 0..1)
 var tells_enabled: bool = false
 var priority_mult: float = 1.0
+var easy_mode: bool = false
 
 func reset() -> void:
 	candidates.clear()
@@ -67,6 +68,9 @@ func choose_move(detective_id: int, state: SYGameState, map_data: MapData) -> Di
 	var d_moves: Array[Dictionary] = state.legal_moves(detective_id)
 	if d_moves.is_empty():
 		return {}
+
+	if easy_mode and randf() < 0.65:
+		return d_moves[randi() % d_moves.size()]
 
 	update_candidates(state, map_data)
 
